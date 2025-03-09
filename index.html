@@ -4,63 +4,51 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Clarify</title>
-    <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Geist">
+    <meta name="description" content="Visualize your listening habits">
+    <link rel="icon" href="/favicon.ico">
+    <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        body {
-            font-family: 'Geist', sans-serif; margin: 0; padding: 20px; background-color: #f4f4f9;
-            margin: 0;
-            padding: 0;
-            background-color: #f4f4f9;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-        }
-        .container {
-            text-align: center;
-            background-color: white;
-            padding: 40px;
-            border-radius: 8px;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-            max-width: 500px;
-            width: 100%;
-        }
-        h1 {
-            font-size: 2rem;
-            margin-bottom: 20px;
-        }
-        .login-btn {
-            background-color: #1DB954;
-            color: white;
-            padding: 15px 30px;
-            border: none;
-            border-radius: 30px;
-            font-size: 1.2rem;
-            cursor: pointer;
-        }
-        .login-btn:hover {
-            background-color: #1ed760;
+        /* Background Grid with artist images */
+        .bg-tiles {
+            background: url('artist1.jpg'), url('artist2.jpg'), url('artist3.jpg'); /* Replace with real image URLs */
+            background-size: cover;
+            background-repeat: no-repeat;
+            background-position: center;
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            grid-gap: 10px;
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            z-index: -1;
         }
     </style>
 </head>
-<body>
+<body class="bg-black text-white">
+    <!-- Background Tiles Section -->
+    <div class="bg-tiles"></div>
 
-    <div class="container">
-        <h1>Clarify</h1>
-        <p>Login with Spotify to see your music data and insights!</p>
-        <button class="login-btn" onclick="loginWithSpotify()">Login with Spotify</button>
+    <!-- Main content -->
+    <div class="flex flex-col items-center justify-center h-screen text-center px-4">
+        <!-- Title Section -->
+        <h1 class="text-6xl md:text-8xl font-bold mb-4 text-green-500">Clarify</h1>
+        <p class="text-xl sm:text-2xl mb-6 text-white opacity-80">
+            Visualize your listening habits
+        </p>
+
+        <!-- Login Button -->
+        <a href="/oauth2/login" class="bg-green-500 text-white px-6 py-3 rounded-full text-xl hover:bg-green-400 transition duration-200">
+            Login with Spotify
+        </a>
     </div>
 
-    <script>
-        const CLIENT_ID = 'c0bf7f17b46b4433b09d1eda0f48af69';
-        const REDIRECT_URI = 'https://v2dom.dev/clarify/data';
-        const SCOPES = 'user-top-read';
-
-        function loginWithSpotify() {
-            const authUrl = `https://accounts.spotify.com/authorize?client_id=${CLIENT_ID}&response_type=code&redirect_uri=${encodeURIComponent(REDIRECT_URI)}&scope=${SCOPES}`;
-            window.location.href = authUrl;
-        }
-    </script>
-
+    <!-- Footer Section -->
+    <div class="absolute bottom-0 left-0 right-0 py-4 bg-black text-white text-sm opacity-70">
+        <div class="flex justify-between items-center px-6">
+            <!-- You can add footer content here if needed -->
+        </div>
+    </div>
 </body>
 </html>
