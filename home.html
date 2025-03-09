@@ -1,181 +1,67 @@
-<html lang="en" dir="ltr"><head>
-    <!-- Global site tag (gtag.js) - Google Analytics -->
-    <!-- Google tag (gtag.js) -->
-    <script id="twitter-wjs" src="https://platform.twitter.com/widgets.js"></script><script data-cfasync="false" async="" src="https://www.googletagmanager.com/gtag/js?id=G-VC59VKFDWC"></script>
-  
-    <script type="text/javascript">
-      window.ramp = window.ramp || {};
-      window.ramp.que = window.ramp.que || [];
-      window.ramp.passiveMode = true;
-    </script>
-  
-    <script type="text/javascript">
-  
-      // Define the ad units that you will use with an array
-      var pwUnits = [
-        {
-          // You can define the selectorId however you want, but the type must match to the ad unit's type
-          selectorId: 'pwDeskLbAtf',
-          type: 'leaderboard_atf'
-        },
-        {
-          // You can define the selectorId however you want, but the type must match to the ad unit's type
-          selectorId: 'pwMobiLbAtf',
-          type: 'leaderboard_atf'
-        },
-        {
-          selectorId: 'pwDeskSkyAtf',
-          type: 'sky_atf'
-        },
-        {
-          selectorId: 'pwMobiSkyAtf',
-          type: 'sky_atf'
-        },
-        {
-          selectorId: 'pwDeskSkyBtf1',
-          type: 'sky_btf'
-        },
-        {
-          selectorId: 'pwMobiSkyBtf1',
-          type: 'sky_btf'
-        },
-        {
-          selectorId: 'pwDeskMedRectAtf',
-          type: 'med_rect_atf'
-        },
-        {
-          selectorId: 'pwMobiMedRectAtf',
-          type: 'med_rect_atf'
-        },
-        {
-          selectorId: 'pwMobiMedRectBtf1',
-          type: 'med_rect_btf'
-        },
-        {
-          selectorId: 'pwDeskMedRectBtf1',
-          type: 'med_rect_btf'
-        },
-        {
-          selectorId: 'pwDeskMedRectBtf2',
-          type: 'med_rect_btf'
-        },
-        {
-          selectorId: 'pwMobiMedRectBtf2',
-          type: 'med_rect_btf'
-        },
-        {
-          selectorId: 'pwDeskMedRectBtf3',
-          type: 'med_rect_btf'
-        },
-        {
-          selectorId: 'pwMobiMedRectBtf3',
-          type: 'med_rect_btf'
-        },
-        {
-          selectorId: 'pwDeskMedRectBtf4',
-          type: 'med_rect_btf'
-        },
-        {
-          selectorId: 'pwMobiMedRectBtf4',
-          type: 'med_rect_btf'
-        },
-        {
-          type: 'bottom_rail'
-        },
-        {
-          type: 'in_content'
-        },
-        {
-          type: 'left_rail'
-        },
-        {
-          type: 'right_rail'
-        },
-        {
-          type: 'corner_ad_video'
-        }
-  
-      ]
-  
-      // Define the init function
-      var init = function () {
-        ramp
-          // pass in the array 'pwUnits' defined right above
-          .addUnits(pwUnits)
-          .then(() => {
-            ramp.displayUnits()
-          }).catch((e) => {
-            // catch errors
-            ramp.displayUnits()
-            console.log(e)
-          })
-      }
-      ramp.que.push(init);
-    </script>
-    <script data-cfasync="false" async="" src="//cdn.intergient.com/1025130/74683/ramp.js"></script>
-    <script data-cfasync="false">
-      window._pwGA4PageviewId = ''.concat(Date.now());
-      window.dataLayer = window.dataLayer || [];
-      window.gtag = window.gtag || function () {
-        dataLayer.push(arguments);
-      };
-      gtag('js', new Date());
-      gtag('config', 'G-VC59VKFDWC', { 'send_page_view': false });
-      gtag(
-        'event',
-        'ramp_js',
-        {
-          'send_to': 'G-VC59VKFDWC',
-          'pageview_id': window._pwGA4PageviewId
-        }
-      );
-    </script>
-  
-    <meta charset="utf-8">
-    <title>Obscurify Music</title>
-    <base href="/">
-    <meta name="viewport" content="viewport-fit=cover, width=device-width, initial-scale=1.0">
-    <meta name="og:image" content="https://www.obscurifymusic.com/assets/images/app/card-image.jpg">
-    <meta property="og:title" content="How Obscure is your streaming music?">
-      <meta property="og:site_name" content="Obscurify">
-      <meta property="og:url" content="https://www.obscurifymusic.com">
-      <meta property="og:description" content="Spotify Stats, Analyzer, and Music Rater. Learn more about your music taste and compare it to others with Obscurify.">
-      <meta property="og:type" content="article">
-      <meta property="og:locale" content="en_US">
-  
-    <meta name="twitter:card" content="summary_large_image">
-    <meta name="twitter:site" content="@obscurifymusic">
-    <meta name="twitter:title" content="Obscurify Music">
-    <meta name="news_keywords" content="music,spotify,data">
-  
-    <meta name="twitter:description" content="Spotify Stats, Analyzer, and Music Rater. Learn more about your music taste and compare it to others' with Obscurify.">
-    <meta name="twitter:image" content="https://www.obscurifymusic.com/assets/images/app/card-image.jpg">
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black">
-    <meta name="theme-color" content="#65d26e">
-    <meta name="msapplication-TileColor" content="#00a300">
-    <link rel="icon" type="image/x-icon" href="favicon.ico">
-    <script src="https://kit.fontawesome.com/432e11ca7a.js" crossorigin="anonymous"></script>
-    <script src="https://unpkg.com/@lottiefiles/lottie-player@latest/dist/lottie-player.js"></script>
-  
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="">
-  
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Clarify</title>
+    <meta name="description" content="Unlock the full potential of your music experience with Clarify. Get insights into your listening habits on Spotify.">
+    <link rel="shortcut icon" href="/favicon.ico">
+    <link rel="stylesheet" href="/_next/static/css/d29eeda757dc16f6.css">
+    <script defer src="/_next/static/chunks/webpack-cb7634a8b6194820.js"></script>
+    <script defer src="/_next/static/chunks/main-4da6b05fc3579a91.js"></script>
+</head>
+<body>
+    <h1>Welcome to Clarify</h1>
+    <p>Fetching your Spotify data...</p>
+
     <script>
-      window.twttr = (function (d, s, id) {
-        var js,
-          fjs = d.getElementsByTagName(s)[0],
-          t = window.twttr || {};
-        if (d.getElementById(id)) return t;
-        js = d.createElement(s);
-        js.id = id;
-        js.src = "https://platform.twitter.com/widgets.js";
-        fjs.parentNode.insertBefore(js, fjs);
-        t._e = [];
-        t.ready = function (f) {
-          t._e.push(f);
+        // Function to get query parameters from the URL
+        function getQueryParam(name) {
+            const urlParams = new URLSearchParams(window.location.search);
+            return urlParams.get(name);
+        }
+
+        // Function to remove 'code' from the URL after processing
+        function removeQueryParam(param) {
+            const url = new URL(window.location);
+            url.searchParams.delete(param);
+            window.history.replaceState({}, document.title, url);
+        }
+
+        // Handle Spotify Authorization Code
+        window.onload = async function () {
+            const authCode = getQueryParam("code");
+
+            if (authCode) {
+                console.log("Authorization Code:", authCode);
+
+                // 🔴 STEP 1: Send the authCode to your backend for token exchange
+                try {
+                    const response = await fetch("https://your-backend.com/api/spotify/token", {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({ code: authCode })
+                    });
+
+                    const data = await response.json();
+                    if (data.access_token) {
+                        console.log("Access Token:", data.access_token);
+
+                        // 🔵 STEP 2: Store token in localStorage (or use it immediately)
+                        localStorage.setItem("spotify_access_token", data.access_token);
+
+                        // 🔵 STEP 3: Remove 'code' from URL
+                        removeQueryParam("code");
+
+                        // Redirect or load user data...
+                    } else {
+                        console.error("Error fetching access token:", data);
+                    }
+                } catch (error) {
+                    console.error("Token Exchange Error:", error);
+                }
+            }
         };
-        return t;
-      })(document, "script", "twitter-wjs");
     </script>
-  
+</body>
+</html>
