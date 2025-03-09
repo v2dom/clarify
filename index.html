@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Clarify</title>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Geist">
+    <style>
+        body {
+            font-family: 'Geist', sans-serif; margin: 0; padding: 20px; background-color: #f4f4f9;
+            margin: 0;
+            padding: 0;
+            background-color: #f4f4f9;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+        .container {
+            text-align: center;
+            background-color: white;
+            padding: 40px;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            max-width: 500px;
+            width: 100%;
+        }
+        h1 {
+            font-size: 2rem;
+            margin-bottom: 20px;
+        }
+        .login-btn {
+            background-color: #1DB954;
+            color: white;
+            padding: 15px 30px;
+            border: none;
+            border-radius: 30px;
+            font-size: 1.2rem;
+            cursor: pointer;
+        }
+        .login-btn:hover {
+            background-color: #1ed760;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <h1>Clarify</h1>
+        <p>Login with Spotify to see your music data and insights!</p>
+        <button class="login-btn" onclick="loginWithSpotify()">Login with Spotify</button>
+    </div>
+
+    <script>
+        const CLIENT_ID = 'c0bf7f17b46b4433b09d1eda0f48af69'; // Replace with your Client ID
+        const REDIRECT_URI = 'http://localhost:8888/callback'; // Replace with your Redirect URI
+        const SCOPES = 'user-top-read'; // The scope for top tracks and artists
+
+        // Redirect the user to the Spotify login page
+        function loginWithSpotify() {
+            const authUrl = `https://accounts.spotify.com/authorize?client_id=${CLIENT_ID}&response_type=code&redirect_uri=${encodeURIComponent(REDIRECT_URI)}&scope=${SCOPES}`;
+            window.location.href = authUrl;
+        }
+    </script>
+
+</body>
+</html>
