@@ -54,15 +54,14 @@
     </div>
 
     <script>
-        const CLIENT_ID = 'c0bf7f17b46b4433b09d1eda0f48af69'; // Replace with your Spotify Client ID
-        const CLIENT_SECRET = '27c98fdbd46d41f38ea0eb10a0cdfae1'; // Replace with your Spotify Client Secret
-        const REDIRECT_URI = 'http://localhost:8888/callback'; // Replace with your Redirect URI
+        const CLIENT_ID = 'c0bf7f17b46b4433b09d1eda0f48af69';
+        const CLIENT_SECRET = '27c98fdbd46d41f38ea0eb10a0cdfae1';
+        const REDIRECT_URI = 'http://localhost:8888/callback';
 
         const urlParams = new URLSearchParams(window.location.search);
-        const code = urlParams.get('code'); // Get the 'code' query parameter
+        const code = urlParams.get('code');
 
         if (code) {
-            // Exchange the code for an access token
             const tokenUrl = 'https://accounts.spotify.com/api/token';
             const params = new URLSearchParams();
             params.append('grant_type', 'authorization_code');
@@ -88,9 +87,7 @@
             .catch(error => console.error('Error exchanging code for token:', error));
         }
 
-        // Fetch the top artists and top tracks
         function fetchData(accessToken) {
-            // Fetch Top Artists
             fetch('https://api.spotify.com/v1/me/top/artists?limit=10', {
                 headers: { 'Authorization': `Bearer ${accessToken}` }
             })
@@ -106,7 +103,6 @@
             })
             .catch(error => console.error('Error fetching top artists:', error));
 
-            // Fetch Top Tracks
             fetch('https://api.spotify.com/v1/me/top/tracks?limit=10', {
                 headers: { 'Authorization': `Bearer ${accessToken}` }
             })
