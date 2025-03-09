@@ -52,11 +52,10 @@
     </div>
 
     <script>
-        const CLIENT_ID = 'c0bf7f17b46b4433b09d1eda0f48af69'; // Replace with your Client ID
-        const REDIRECT_URI = 'https://v2dom.dev/clarify/callback'; // Replace with your Redirect URI
-        const SCOPES = 'user-top-read'; // The scope for top tracks and artists
+        const CLIENT_ID = 'c0bf7f17b46b4433b09d1eda0f48af69';
+        const REDIRECT_URI = 'https://v2dom.dev/clarify/data';
+        const SCOPES = 'user-top-read';
 
-        // Redirect the user to the Spotify login page
         function loginWithSpotify() {
             const authUrl = `https://accounts.spotify.com/authorize?client_id=${CLIENT_ID}&response_type=code&redirect_uri=${encodeURIComponent(REDIRECT_URI)}&scope=${SCOPES}`;
             window.location.href = authUrl;
