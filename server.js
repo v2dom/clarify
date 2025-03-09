@@ -1,34 +1,48 @@
 const express = require("express");
-const axios = require("axios");
+const SpotifyWebAPI = require("spotify-web-api-node");
 const cors = require("cors");
-
+const bodyParser = require("body-parser");
 const app = express();
-app.use(express.json());
-app.use(cors()); // Allow cross-origin requests
-
-const SPOTIFY_CLIENT_ID = "c0bf7f17b46b4433b09d1eda0f48af69";
-const SPOTIFY_CLIENT_SECRET = "27c98fdbd46d41f38ea0eb10a0cdfae1";
-const REDIRECT_URI = "https://v2dom.dev/clarify/home";
-
-app.post("/api/spotify/token", async (req, res) => {
-    const { code } = req.body;
-
-    try {
-        const response = await axios.post("https://accounts.spotify.com/api/token", new URLSearchParams({
-            grant_type: "authorization_code",
-            code: code,
-            redirect_uri: REDIRECT_URI,
-            client_id: SPOTIFY_CLIENT_ID,
-            client_secret: SPOTIFY_CLIENT_SECRET
-        }).toString(), {
-            headers: { "Content-Type": "application/x-www-form-urlencoded" }
-        });
-
-        res.json(response.data); // Send access token to frontend
-    } catch (error) {
-        console.error("Error exchanging code for token:", error.response?.data || error);
-        res.status(500).json({ error: "Failed to get access token" });
-    }
+app.use(cors());
+//for CORS policy
+app.use(bodyParser.json());
+app.post("/refresh", (req, res) => {
+  const refreshToken = req.body.refreshToken;
+  const spotifyApi = new SpotifWebAPI({
+    redirectUri: "http://localhost:3000",
+    clientId: "clientId",
+    clientSecret: "clientSecret",
+    refreshToken,
+  });
+  spotifyApi
+    .refreshAccessToken()
+    .then((data) => {
+      console.log(data.body);
+    })
+    .catch(() => {
+      res.status(400);
+    });
+});
+app.post("/login", (req, res) => {
+  const code = req.body.code;
+  const spotifyApi = new SpotifWebAPI({
+    redirectUri: "http://localhost:3000",
+    clientId: "e8acbd5e26d4445681fb69ea7112c35c",
+    clientSecret: "cabf3a9d6a4e4ba79d4b0bb1caa802c1",
+  });
+  spotifyApi
+    .authorizationCodeGrant(code)
+    .then((data) => {
+      res.json({
+        accessToken: data.body.access_token,
+        refreshToken: data.body.refresh_token,
+        expiresIn: data.body.expires_in,
+      });
+    })
+    .catch((err) => {
+      console.log(err);
+      res.status(400);
+    });
 });
 
-app.listen(3000, () => console.log("Server running on port 3000"));
+app.listen(3001);
