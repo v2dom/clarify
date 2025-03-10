@@ -35,7 +35,7 @@ app.post("/login", (req, res) => {
   const spotifyApi = new SpotifWebAPI({
     redirectUri: "https://v2dom.dev/clarify/home",
     clientId: "c0bf7f17b46b4433b09d1eda0f48af69",
-    clientSecret: "27c98fdbd46d41f38ea0eb10a0cdfae1",
+    clientSecret: "hidden",
   });
 
   spotifyApi
