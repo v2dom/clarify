@@ -24,7 +24,7 @@ app.post("/api/spotify/token", async (req, res) => {
     const { code } = req.body;
 
     const clientId = "c0bf7f17b46b4433b09d1eda0f48af69";
-    const clientSecret = "27c98fdbd46d41f38ea0eb10a0cdfae1";
+    const clientSecret = "hidden";
     const redirectUri = "https://v2dom.dev/clarify/home";
     const scope = "user-top-read user-library-read";
 
