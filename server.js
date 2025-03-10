@@ -7,33 +7,28 @@ const path = require("path");
 const app = express();
 const PORT = 3000;
 
-// Middleware
 app.use(cors());
 app.use(bodyParser.json());
 
-// Serve static files from the "public" directory
 app.use(express.static(path.join(__dirname, "public")));
 
-// Root route (Serve index.html)
 app.get("/", (req, res) => {
     res.sendFile(path.join(__dirname, "public", "index.html"));
 });
 
-// Home route (Serve home.html)
 app.get("/home", (req, res) => {
     res.sendFile(path.join(__dirname, "public", "home.html"));
 });
 
-// Spotify Token Exchange Route
 app.post("/api/spotify/token", async (req, res) => {
     const { code } = req.body;
 
     const clientId = "c0bf7f17b46b4433b09d1eda0f48af69";
     const clientSecret = "27c98fdbd46d41f38ea0eb10a0cdfae1";
-    const redirectUri = "http://localhost:3000/home"; // Redirecting to /home after login
-    const scope = "user-top-read user-library-read"; // Add any other required scopes
+    const redirectUri = "http://localhost:3000/home";
+    const scope = "user-top-read user-library-read";
 
-    console.log("Authorization Code Received:", code); // Log the received code
+    console.log("Authorization Code Received:", code);
 
     try {
         console.log("Exchanging authorization code for access token...");
@@ -50,7 +45,7 @@ app.post("/api/spotify/token", async (req, res) => {
             },
         });
 
-        console.log("Token exchange successful. Response data:", response.data); // Log the response from Spotify
+        console.log("Token exchange successful. Response data:", response.data);
 
         res.json({
             access_token: response.data.access_token,
@@ -58,19 +53,18 @@ app.post("/api/spotify/token", async (req, res) => {
             expires_in: response.data.expires_in,
         });
     } catch (error) {
-        console.error("Error exchanging token:", error.response?.data || error.message); // Log the error
+        console.error("Error exchanging token:", error.response?.data || error.message);
         res.status(500).json({ error: "Error connecting to Spotify" });
     }
 });
 
-// Spotify Refresh Token Route
 app.post("/api/spotify/refresh", async (req, res) => {
     const { refresh_token } = req.body;
 
     const clientId = "c0bf7f17b46b4433b09d1eda0f48af69";
     const clientSecret = "27c98fdbd46d41f38ea0eb10a0cdfae1";
 
-    console.log("Received refresh token:", refresh_token); // Log the received refresh token
+    console.log("Received refresh token:", refresh_token);
 
     try {
         console.log("Refreshing access token...");
@@ -86,19 +80,18 @@ app.post("/api/spotify/refresh", async (req, res) => {
             },
         });
 
-        console.log("Token refresh successful. Response data:", response.data); // Log the response from Spotify
+        console.log("Token refresh successful. Response data:", response.data);
 
         res.json({
             access_token: response.data.access_token,
             expires_in: response.data.expires_in,
         });
     } catch (error) {
-        console.error("Error refreshing token:", error.response?.data || error.message); // Log the error
+        console.error("Error refreshing token:", error.response?.data || error.message);
         res.status(500).json({ error: "Error refreshing Spotify token" });
     }
 });
 
-// Start the backend server
 app.listen(PORT, () => {
     console.log(`Server running on http://localhost:${PORT}`);
 });
