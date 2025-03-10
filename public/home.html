@@ -58,7 +58,7 @@
             if (authCode) {
                 console.log("Authorization Code:", authCode);
 
-                // 🔴 STEP 1: Exchange authorization code for an access token
+                // Exchange authorization code for an access token
                 try {
                     const response = await fetch("http://localhost:3000/api/spotify/token", {
                         method: "POST",
@@ -70,13 +70,13 @@
                     if (data.access_token) {
                         console.log("Access Token:", data.access_token);
 
-                        // 🔵 STEP 2: Store access token for future use
+                        // Store access token for future use
                         localStorage.setItem("spotify_access_token", data.access_token);
 
-                        // 🔵 STEP 3: Remove 'code' from the URL
+                        // Remove 'code' from the URL
                         removeQueryParam("code");
 
-                        // 🔵 STEP 4: Fetch and display user profile
+                        // Fetch and display user profile
                         fetchSpotifyProfile(data.access_token);
                     } else {
                         console.error("Error fetching access token:", data);
