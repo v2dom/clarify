@@ -61,7 +61,6 @@ app.post("/api/spotify/refresh", async (req, res) => {
     const { refresh_token } = req.body;
 
     const clientId = "c0bf7f17b46b4433b09d1eda0f48af69";
-    const clientSecret = "0b2207eb4ec046fbab6c41e77573206a";
 
     console.log("Received refresh token:", refresh_token);
 
