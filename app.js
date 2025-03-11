@@ -12,7 +12,6 @@ app.post("/refresh", (req, res) => {
   const spotifyApi = new SpotifWebAPI({
     redirectUri: "https://v2dom.dev/clarify/home",
     clientId: "e8acbd5e26d4445681fb69ea7112c35c",
-    clientSecret: "cabf3a9d6a4e4ba79d4b0bb1caa802c1",
     refreshToken,
   });
 
@@ -36,6 +35,7 @@ app.post("/login", (req, res) => {
     redirectUri: "https://v2dom.dev/clarify/home",
     clientId: "c0bf7f17b46b4433b09d1eda0f48af69",
     clientSecret: "0b2207eb4ec046fbab6c41e77573206a",
+    clientSecret: "hidden",
   });
 
   spotifyApi
