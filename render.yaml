@@ -1,0 +1,18 @@
+services:
+  - type: web
+    name: clarify-backend
+    env: node
+    buildCommand: npm install
+    startCommand: npm start
+    envVars:
+      - key: SPOTIFY_CLIENT_ID
+        fromService: 
+          name: clarify-backend
+          type: secret
+      - key: SPOTIFY_CLIENT_SECRET
+        fromService: 
+          name: clarify-backend
+          type: secret
+      - key: SPOTIFY_REDIRECT_URI
+        value: https://v2dom.dev/clarify/home
+    healthCheckPath: /health

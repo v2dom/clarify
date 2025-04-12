@@ -1,5 +1,6 @@
+require('dotenv').config();
 const express = require("express");
-const SpotifWebAPI = require("spotify-web-api-node");
+const SpotifyWebAPI = require("spotify-web-api-node");
 const cors = require("cors");
 const bodyParser = require("body-parser");
 
@@ -7,11 +8,18 @@ const app = express();
 app.use(cors());
 app.use(bodyParser.json());
 
+// Environment variables for security
+const clientId = process.env.SPOTIFY_CLIENT_ID;
+const clientSecret = process.env.SPOTIFY_CLIENT_SECRET;
+const redirectUri = process.env.SPOTIFY_REDIRECT_URI;
+
+// Token refresh endpoint
 app.post("/refresh", (req, res) => {
   const refreshToken = req.body.refreshToken;
-  const spotifyApi = new SpotifWebAPI({
-    redirectUri: "https://v2dom.dev/clarify/home",
-    clientId: "e8acbd5e26d4445681fb69ea7112c35c",
+  const spotifyApi = new SpotifyWebAPI({
+    clientId,
+    clientSecret,
+    redirectUri,
     refreshToken,
   });
 
@@ -29,12 +37,13 @@ app.post("/refresh", (req, res) => {
     });
 });
 
+// Login endpoint
 app.post("/login", (req, res) => {
   const code = req.body.code;
-  const spotifyApi = new SpotifWebAPI({
-    redirectUri: "https://v2dom.dev/clarify/home",
-    clientId: "c0bf7f17b46b4433b09d1eda0f48af69",
-    clientSecret: "hidden",
+  const spotifyApi = new SpotifyWebAPI({
+    clientId,
+    clientSecret,
+    redirectUri,
   });
 
   spotifyApi
@@ -52,6 +61,12 @@ app.post("/login", (req, res) => {
     });
 });
 
-app.listen(3001, () => {
-  console.log("Server running on http://localhost:3001");
+// Health check endpoint
+app.get('/health', (req, res) => {
+  res.status(200).send('OK');
+});
+
+const PORT = process.env.PORT || 3001;
+app.listen(PORT, () => {
+  console.log(`Server running on port ${PORT}`);
 });
