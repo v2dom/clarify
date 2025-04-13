@@ -162,6 +162,15 @@
             <h2>Top Genres</h2>
             <ul id="genre-list" class="genre-list"></ul>
         </div>
+
+        <div class="card square-card">
+            <h2>Hidden Gems</h2>
+            <p>Discover songs from your top artists you've never heard</p>
+            <button id="recommend-btn" class="bg-green-500 hover:bg-green-600 text-white py-2 px-4 rounded mt-2">
+                Find New Songs
+            </button>
+            <div id="recommendation-result" class="mt-4"></div>
+        </div>
     </div>
 
     <script>
@@ -457,6 +466,71 @@ async function handleAuth() {
                 console.error("Error fetching data:", error);
             });
         }
+
+        async function recommendNeverHeardSong() {
+    const accessToken = localStorage.getItem("spotify_access_token");
+    if (!accessToken) return;
+    
+    try {
+        // 1. Get user's top 3 artists
+        const topArtists = await fetchSpotifyData(accessToken, "artists", "medium_term", 3);
+        
+        // 2. Get user's recently played tracks (last 50)
+        const recentlyPlayed = await fetch(`https://api.spotify.com/v1/me/player/recently-played?limit=50`, {
+            headers: { 'Authorization': `Bearer ${accessToken}` }
+        }).then(res => res.json());
+        
+        const playedTrackIds = recentlyPlayed.items.map(item => item.track.id);
+        
+        // 3. For each artist, find an unheard track
+        for (const artist of topArtists) {
+            const topTracks = await fetch(`https://api.spotify.com/v1/artists/${artist.id}/top-tracks?market=US`, {
+                headers: { 'Authorization': `Bearer ${accessToken}` }
+            }).then(res => res.json());
+            
+            const unheardTrack = topTracks.tracks.find(track => !playedTrackIds.includes(track.id));
+            
+            if (unheardTrack) {
+                return {
+                    artist: artist.name,
+                    song: unheardTrack.name,
+                    url: unheardTrack.external_urls.spotify,
+                    image: unheardTrack.album.images[0]?.url
+                };
+            }
+        }
+        return null;
+    } catch (error) {
+        console.error("Recommendation failed:", error);
+        return null;
+    }
+}
+
+// Add click handler for the button
+document.getElementById('recommend-btn').addEventListener('click', async () => {
+    const resultDiv = document.getElementById('recommendation-result');
+    resultDiv.innerHTML = '<p>Searching for hidden gems...</p>';
+    
+    const recommendation = await recommendNeverHeardSong();
+    
+    if (recommendation) {
+        resultDiv.innerHTML = `
+            <div class="flex items-center">
+                <img src="${recommendation.image}" class="w-16 h-16 mr-4 rounded">
+                <div>
+                    <p class="font-bold">${recommendation.song}</p>
+                    <p>by ${recommendation.artist}</p>
+                    <a href="${recommendation.url}" target="_blank" 
+                       class="text-green-500 hover:underline mt-2 block">
+                       Play on Spotify
+                    </a>
+                </div>
+            </div>
+        `;
+    } else {
+        resultDiv.innerHTML = '<p>You\'ve heard all the top tracks from your favorite artists!</p>';
+    }
+});
 
         window.onload = handleSpotifyAuth;
     </script>
