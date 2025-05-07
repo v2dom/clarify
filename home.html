@@ -52,10 +52,139 @@ $1
   </div>
 
   <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 px-6" id="dashboard" style="display:none">
-    <!-- Cards here (unchanged) -->
-  </div>
+    <div class="card">
+      <h2>Top Artists <select id="artist-range" onchange="initializeApp()" class="bg-black text-white ml-2">
+        <option value="short_term">Last 7 Days</option>
+        <option value="medium_term">Last 30 Days</option>
+        <option value="long_term">All Time</option>
+      </select></h2>
+      <ul id="top-artists"></ul>
+    </div>
 
+    <div class="card">
+      <h2>Top Tracks <select id="track-range" onchange="initializeApp()" class="bg-black text-white ml-2">
+        <option value="short_term">Last 7 Days</option>
+        <option value="medium_term">Last 30 Days</option>
+        <option value="long_term">All Time</option>
+      </select></h2>
+      <ul id="top-tracks"></ul>
+    </div>
+
+    <div class="card">
+      <h2>Now Playing</h2>
+      <div class="now-playing text-center" id="now-playing"></div>
+    </div>
+
+    <div class="card">
+      <h2>Top Genres</h2>
+      <ul id="top-genres"></ul>
+    </div>
+
+    <div class="card col-span-1 md:col-span-2 lg:col-span-3">
+      <h2>Listening Heatmap</h2>
+      <canvas id="heatmap" height="100"></canvas>
+        </div>
+
+    <div class="card">
+      <h2>Playback Controls</h2>
+      <div class="flex justify-center gap-4 mt-4">
+        <button onclick="controlPlayback('previous')" class="bg-gray-700 px-4 py-2 rounded">Previous</button>
+        <button onclick="controlPlayback('play-pause')" class="bg-gray-700 px-4 py-2 rounded">Play/Pause</button>
+        <button onclick="controlPlayback('next')" class="bg-gray-700 px-4 py-2 rounded">Next</button>
+      </div>
+    </div>
+
+    <div class="card col-span-1 md:col-span-2 lg:col-span-3">
+      <h2>Generate Playlist</h2>
+      <button onclick="generatePlaylist()" class="bg-green-600 hover:bg-green-700 text-white px-6 py-2 rounded mt-2">Create Playlist from Top Tracks</button>
+      <p id="playlist-result" class="mt-2 text-sm text-green-400"></p>
+    </div>
+  </div>
   <script>
+
+    function renderTopList(elId, items, isTrack = false) {
+      const el = document.getElementById(elId);
+      el.innerHTML = items.map((item, i) => `
+        <li>
+          <img src="${isTrack ? item.album.images[0].url : item.images[0].url}" alt="cover">
+          <div>
+            <strong>${i + 1}. ${item.name}</strong>${isTrack ? `<br><small>${item.artists.map(a => a.name).join(', ')}</small>` : ''}
+          </div>
+        </li>`).join('');
+    }
+
+    function renderGenres(artists) {
+      const genreMap = {};
+      artists.forEach(artist => {
+        artist.genres.forEach(genre => {
+          genreMap[genre] = (genreMap[genre] || 0) + 1;
+        });
+      });
+      const sorted = Object.entries(genreMap).sort((a, b) => b[1] - a[1]).slice(0, 5);
+      document.getElementById("top-genres").innerHTML = sorted.map(([g], i) => `<li>${i + 1}. ${g}</li>`).join('');
+    }
+
+    async function updateTopArtists(token) {
+      const range = document.getElementById("artist-range")?.value || "short_term";
+      const data = await fetchSpotify(`me/top/artists?time_range=${range}&limit=10`, token);
+      renderTopList("top-artists", data.items);
+      renderGenres(data.items);
+    }
+
+    async function updateTopTracks(token) {
+      const range = document.getElementById("track-range")?.value || "short_term";
+      const data = await fetchSpotify(`me/top/tracks?time_range=${range}&limit=10`, token);
+      renderTopList("top-tracks", data.items, true);
+    }
+
+    async function renderNowPlaying(token) {
+      try {
+        const data = await fetchSpotify("me/player/currently-playing", token);
+        if (!data || !data.item) {
+          document.getElementById("now-playing").innerHTML = '<p>No track currently playing.</p>';
+          return;
+        }
+        document.getElementById("now-playing").innerHTML = `
+          <img src="${data.item.album.images[0].url}" class="w-40 mx-auto">
+          <div class="mt-2 text-lg font-bold highlight">${data.item.name}</div>
+          <div class="text-sm uppercase">${data.item.artists.map(a => a.name).join(', ')}</div>
+          <div class="text-sm text-gray-400">${data.item.album.name}</div>
+        `;
+      } catch (e) {
+        console.error("Now playing failed:", e);
+      }
+    }
+
+    async function renderHeatmap(token) {
+      try {
+        const data = await fetchSpotify("me/player/recently-played?limit=50", token);
+        if (!data.items) return;
+        const hours = Array(24).fill(0);
+        data.items.forEach(item => {
+          const hour = new Date(item.played_at).getHours();
+          hours[hour]++;
+        });
+        const ctx = document.getElementById("heatmap").getContext("2d");
+        new Chart(ctx, {
+          type: "bar",
+          data: {
+            labels: [...Array(24).keys()].map(h => `${h}:00`),
+            datasets: [{
+              label: "Tracks Played by Hour",
+              data: hours,
+              backgroundColor: "rgba(34,197,94,0.7)"
+            }]
+          },
+          options: {
+            plugins: { legend: { display: false } },
+            scales: { x: { ticks: { color: "white" } }, y: { ticks: { color: "white" } } }
+          }
+        });
+      } catch (e) {
+        console.error("Heatmap error:", e);
+      }
+    }
+    
     const BACKEND_URL = "https://clarify-3zv7.onrender.com";
 
     async function fetchSpotify(endpoint, token) {
@@ -129,6 +258,58 @@ $1
         console.error("Initialization error:", error);
         document.getElementById("status").textContent = "Failed to load data.";
       }
+    }
+
+        async function controlPlayback(action) {
+      const token = localStorage.getItem("spotify_access_token");
+      let endpoint = "";
+
+      if (action === 'previous') endpoint = 'me/player/previous';
+      else if (action === 'next') endpoint = 'me/player/next';
+      else if (action === 'play-pause') {
+        const state = await fetchSpotify('me/player', token);
+        endpoint = state && state.is_playing ? 'me/player/pause' : 'me/player/play';
+      }
+
+      fetch(`https://api.spotify.com/v1/${endpoint}`, {
+        method: 'POST',
+        headers: { 'Authorization': `Bearer ${token}` }
+      }).then(() => renderNowPlaying(token));
+    }
+
+    async function generatePlaylist() {
+      const token = localStorage.getItem("spotify_access_token");
+      const topTracks = await fetchSpotify("me/top/tracks?limit=10", token);
+      const user = await fetchSpotify("me", token);
+      const uris = topTracks.items.map(t => t.uri);
+
+      const topArtists = await fetchSpotify("me/top/artists?limit=5", token);
+      let genre = "vibe";
+      if (topArtists.items.length && topArtists.items[0].genres.length) {
+        genre = topArtists.items[0].genres[0];
+      }
+      const playlistName = `${user.display_name}'s ${genre} Clarify Mix`;
+
+      const playlist = await fetch("https://api.spotify.com/v1/users/" + user.id + "/playlists", {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          name: playlistName,
+          description: "Auto-generated playlist from Clarify dashboard",
+          public: false
+        })
+      }).then(res => res.json());
+
+      await fetch(`https://api.spotify.com/v1/playlists/${playlist.id}/tracks`, {
+        method: "POST",
+        headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
+        body: JSON.stringify({ uris })
+      });
+
+      document.getElementById("playlist-result").textContent = `✅ Playlist created: ${playlistName}`;
     }
 
     window.onload = initializeApp;
