@@ -67,15 +67,14 @@
       <ul id="top-tracks"></ul>
     </div>
 
-    <div class="card h-full flex flex-col items-center justify-center">
+    <div class="card col-span-1 md:col-span-2 lg:col-span-3 flex flex-col items-center justify-center">
   <h2>Now Playing</h2>
   <div class="now-playing text-center w-full" id="now-playing"></div>
+  <div class="mt-6 w-full">
+    <h2>Top Genres</h2>
+    <ul id="top-genres"></ul>
+  </div>
 </div>
-
-    <div class="card">
-      <h2>Top Genres</h2>
-      <ul id="top-genres"></ul>
-    </div>
 
     
 
@@ -194,7 +193,6 @@
         console.error("Now playing failed:", e);
       }
     }
-
     
     const BACKEND_URL = "https://clarify-3zv7.onrender.com";
 
@@ -247,7 +245,6 @@
       }
       return token;
     }
-
     async function initializeApp() {
       try {
         const token = await ensureAccessToken();
