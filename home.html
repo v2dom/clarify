@@ -61,7 +61,7 @@
 
   <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 px-6" id="dashboard">
     <div class="card flex flex-col justify-between h-full">
-      <h2>Top Artists <select id="artist-range" onchange="initializeApp()" class="bg-black text-white ml-2">
+      <h2>Top Artists <select id="artist-range" onchange="updateTopArtists()" class="bg-black text-white ml-2">
         <option value="short_term">This Month</option>
         <option value="medium_term">Last 6 Months</option>
         <option value="long_term">All Time</option>
@@ -70,7 +70,7 @@
     </div>
 
     <div class="card flex flex-col justify-between h-full">
-      <h2>Top Tracks <select id="track-range" onchange="initializeApp()" class="bg-black text-white ml-2">
+      <h2>Top Tracks <select id="track-range" onchange="updateTopTracks()" class="bg-black text-white ml-2">
         <option value="short_term">This Month</option>
         <option value="medium_term">Last 6 Months</option>
         <option value="long_term">All Time</option>
@@ -115,7 +115,8 @@
     <div class="card col-span-3">
       <h2>Explore User-Created Playlists</h2>
       <ul id="recommended-playlists" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mt-4"></ul>
-    </div></div>
+    </div>
+  </div>
 
   <script>
     async function fetchSpotify(endpoint, token) {
@@ -144,28 +145,9 @@
       }
     }
 
-    async function initializeApp() {
+    async function updateTopArtists() {
       const token = localStorage.getItem("spotify_access_token");
       if (!token) return window.location.href = "/clarify";
-      try {
-        const profile = await fetchSpotify("me", token);
-        document.getElementById("greeting").textContent = `Hi, ${profile.display_name}`;
-        document.getElementById("status").textContent = "Clarify - by v2dom";
-        document.getElementById("dashboard").style.display = "grid";
-
-        renderNowPlaying(token);
-        if (typeof updateTopArtists === 'function') updateTopArtists(token);
-        if (typeof updateTopTracks === 'function') updateTopTracks(token);
-        if (typeof initializeInsights === 'function') initializeInsights(token);
-        if (typeof fetchRecommendations === 'function') fetchRecommendations(token);
-      } catch (e) {
-        console.error("Init error:", e);
-      }
-    }
-
-    window.onload = initializeApp;
-
-    async function updateTopArtists(token) {
       const range = document.getElementById("artist-range")?.value || "short_term";
       const data = await fetchSpotify(`me/top/artists?time_range=${range}&limit=10`, token);
       const container = document.getElementById("top-artists");
@@ -182,7 +164,9 @@
       }).join("");
     }
 
-    async function updateTopTracks(token) {
+    async function updateTopTracks() {
+      const token = localStorage.getItem("spotify_access_token");
+      if (!token) return window.location.href = "/clarify";
       const range = document.getElementById("track-range")?.value || "short_term";
       const data = await fetchSpotify(`me/top/tracks?time_range=${range}&limit=10`, token);
       const container = document.getElementById("top-tracks");
@@ -200,14 +184,6 @@
             </div>
           </li>`;
       }).join("");
-
-      const genreMap = {};
-      data.items.forEach(track => {
-        track.artists.forEach(artist => {
-          if (!genreMap[artist.name]) genreMap[artist.name] = 0;
-          genreMap[artist.name]++;
-        });
-      });
     }
 
     async function initializeInsights(token) {
@@ -248,6 +224,27 @@
         console.error("Recommendation error:", e);
       }
     }
+
+    async function initializeApp() {
+      const token = localStorage.getItem("spotify_access_token");
+      if (!token) return window.location.href = "/clarify";
+      try {
+        const profile = await fetchSpotify("me", token);
+        document.getElementById("greeting").textContent = `Hi, ${profile.display_name}`;
+        document.getElementById("status").textContent = "Clarify - by v2dom";
+        document.getElementById("dashboard").style.display = "grid";
+
+        renderNowPlaying(token);
+        updateTopArtists();
+        updateTopTracks();
+        initializeInsights(token);
+        fetchRecommendations(token);
+      } catch (e) {
+        console.error("Init error:", e);
+      }
+    }
+
+    window.onload = initializeApp;
   </script>
 </body>
 </html>
