@@ -119,6 +119,14 @@
   </div>
 
   <script>
+    // Parse access token from URL and store it
+    const hash = window.location.hash || window.location.search;
+    const params = new URLSearchParams(hash.replace(/^#/, "?"));
+    const accessToken = params.get("access_token");
+    if (accessToken) {
+      localStorage.setItem("spotify_access_token", accessToken);
+      history.replaceState(null, "", window.location.pathname);
+    }
     document.getElementById("status").textContent = "Clarify - by v2dom";
 
     async function fetchSpotify(endpoint, token) {
