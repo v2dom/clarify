@@ -76,10 +76,15 @@
       try {
         const data = await fetchSpotify("me/player/currently-playing", token);
         if (!data || !data.item) return;
-        document.getElementById("now-playing-img").src = data.item.album.images[0]?.url || "";
-        document.getElementById("now-playing-title").textContent = data.item.name;
-        document.getElementById("now-playing-artist").textContent = data.item.artists.map(a => a.name).join(", ");
-        document.getElementById("now-playing-album").textContent = data.item.album.name;
+        const img = document.getElementById("now-playing-img");
+        const title = document.getElementById("now-playing-title");
+        const artist = document.getElementById("now-playing-artist");
+        const album = document.getElementById("now-playing-album");
+        if (!img || !title || !artist || !album) return;
+        img.src = data.item.album.images[0]?.url || "";
+        title.textContent = data.item.name;
+        artist.textContent = data.item.artists.map(a => a.name).join(", ");
+        album.textContent = data.item.album.name;
       } catch (e) {
         console.error("Now playing error:", e);
       }
@@ -95,10 +100,10 @@
         document.getElementById("dashboard").style.display = "grid";
 
         renderNowPlaying(token);
-        updateTopArtists(token);
-        updateTopTracks(token);
-        initializeInsights(token);
-        fetchRecommendations(token);
+        if (typeof updateTopArtists === 'function') updateTopArtists(token);
+        if (typeof updateTopTracks === 'function') updateTopTracks(token);
+        if (typeof initializeInsights === 'function') initializeInsights(token);
+        if (typeof fetchRecommendations === 'function') fetchRecommendations(token);
       } catch (e) {
         console.error("Init error:", e);
       }
