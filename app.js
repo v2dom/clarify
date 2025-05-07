@@ -1,39 +1,86 @@
+// clarify_backend_app.js
 const express = require('express');
 const axios = require('axios');
 const app = express();
+require('dotenv').config();
 
-// 1. Spotify Login 
+app.use(express.json());
+
+// 1. Spotify Login Route
 app.get('/login', (req, res) => {
-  res.redirect(`https://accounts.spotify.com/authorize?${
-    new URLSearchParams({
-      response_type: 'code',
-      client_id: process.env.SPOTIFY_CLIENT_ID,
-      redirect_uri: 'https://clarify-3zv7.onrender.com/callback',
-      scope: 'user-top-read'
-    })
-  }`);
+  const queryParams = new URLSearchParams({
+    response_type: 'code',
+    client_id: process.env.SPOTIFY_CLIENT_ID,
+    redirect_uri: 'https://clarify-3zv7.onrender.com/callback',
+    scope: 'user-top-read'
+  });
+  res.redirect(`https://accounts.spotify.com/authorize?${queryParams.toString()}`);
 });
 
-// 2. After Spotify redirects back
+// 2. Spotify Callback Route
 app.get('/callback', async (req, res) => {
   const { code } = req.query;
-  
-  // Exchange code for tokens
-  const { data } = await axios.post('https://accounts.spotify.com/api/token', 
-    new URLSearchParams({
-      grant_type: 'authorization_code',
-      code,
-      redirect_uri: 'https://clarify-3zv7.onrender.com/callback'
-    }), {
-      headers: {
-        'Authorization': `Basic ${Buffer.from(`${process.env.SPOTIFY_CLIENT_ID}:${process.env.SPOTIFY_CLIENT_SECRET}`).toString('base64')}`,
-        'Content-Type': 'application/x-www-form-urlencoded'
-      }
-    }
-  );
+  const clientId = process.env.SPOTIFY_CLIENT_ID;
+  const clientSecret = process.env.SPOTIFY_CLIENT_SECRET;
 
-  // Send tokens to frontend
-  res.redirect(`https://v2dom.dev/?access_token=${data.access_token}`);
+  try {
+    const tokenResponse = await axios.post('https://accounts.spotify.com/api/token',
+      new URLSearchParams({
+        grant_type: 'authorization_code',
+        code,
+        redirect_uri: 'https://clarify-3zv7.onrender.com/callback'
+      }),
+      {
+        headers: {
+          'Authorization': 'Basic ' + Buffer.from(`${clientId}:${clientSecret}`).toString('base64'),
+          'Content-Type': 'application/x-www-form-urlencoded'
+        }
+      });
+
+    const { access_token, refresh_token, expires_in } = tokenResponse.data;
+    const redirectUrl = new URL('https://v2dom.dev/clarify/home');
+    redirectUrl.searchParams.set('access_token', access_token);
+    redirectUrl.searchParams.set('refresh_token', refresh_token);
+    redirectUrl.searchParams.set('expires_in', expires_in);
+    res.redirect(redirectUrl.toString());
+  } catch (error) {
+    console.error('Token exchange failed:', error.response?.data || error.message);
+    res.status(500).send('Spotify token exchange failed');
+  }
 });
 
-app.listen(3000);
+// 3. Refresh Access Token
+app.post('/refresh', async (req, res) => {
+  const { refresh_token } = req.body;
+  const clientId = process.env.SPOTIFY_CLIENT_ID;
+  const clientSecret = process.env.SPOTIFY_CLIENT_SECRET;
+
+  try {
+    const response = await axios.post('https://accounts.spotify.com/api/token',
+      new URLSearchParams({
+        grant_type: 'refresh_token',
+        refresh_token
+      }),
+      {
+        headers: {
+          'Authorization': 'Basic ' + Buffer.from(`${clientId}:${clientSecret}`).toString('base64'),
+          'Content-Type': 'application/x-www-form-urlencoded'
+        }
+      });
+
+    res.json(response.data);
+  } catch (error) {
+    console.error('Token refresh failed:', error.response?.data || error.message);
+    res.status(400).json({ error: 'Failed to refresh token' });
+  }
+});
+
+// Optional health check
+app.get('/', (req, res) => {
+  res.send('Clarify backend running');
+});
+
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => {
+  console.log(`Server is running on port ${PORT}`);
+});
