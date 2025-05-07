@@ -184,8 +184,8 @@
           if (Array.isArray(imgData) && imgData.length > 0) {
             imageUrl = imgData[0].url;
           }
-        } catch {
-          console.warn(`No image found for playlist ${pl.id}`);
+        } catch (err) {
+          console.warn(`No image found for playlist ${pl.id}`, err);
         }
 
         return `
