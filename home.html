@@ -50,10 +50,6 @@
       font-size: 1.5rem;
       margin-top: 10px;
     }
-    #dashboard {
-      opacity: 0;
-      transition: opacity 0.8s ease-in-out;
-    }
   </style>
 </head>
 <body class="bg-black text-white">
@@ -96,9 +92,8 @@
         const profile = await fetchSpotify("me", token);
         document.getElementById("greeting").textContent = `Hi, ${profile.display_name}`;
         document.getElementById("status").textContent = "Clarify - by v2dom";
+        document.getElementById("dashboard").style.display = "grid";
 
-        const dashboard = document.getElementById("dashboard");
-        dashboard.style.display = "grid";
         renderNowPlaying(token);
         updateTopArtists(token);
         updateTopTracks(token);
