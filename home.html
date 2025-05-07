@@ -54,9 +54,6 @@
       opacity: 0;
       transition: opacity 0.8s ease-in-out;
     }
-    #dashboard.visible {
-      opacity: 1;
-    }
   </style>
 </head>
 <body class="bg-black text-white">
@@ -102,8 +99,6 @@
 
         const dashboard = document.getElementById("dashboard");
         dashboard.style.display = "grid";
-        requestAnimationFrame(() => dashboard.classList.add("visible"));
-
         renderNowPlaying(token);
         updateTopArtists(token);
         updateTopTracks(token);
