@@ -5,13 +5,33 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Clarify - Spotify Insights</title>
   <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
-<body class="bg-black text-white">
-  <div class="flex flex-col items-center justify-center h-screen text-center px-4">
-    <h1 class="text-4xl font-bold text-green-500 mt-8" id="greeting">Welcome to Clarify</h1>
+<body class="bg-black text-white font-sans">
+  <div class="text-center p-6">
+    <h1 class="text-4xl font-bold text-green-500" id="greeting">Welcome to Clarify</h1>
     <p class="text-xl mt-2" id="status">Loading Spotify data...</p>
-    <div id="user-info" class="text-center mt-4"></div>
   </div>
+
+  <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 px-6" id="dashboard" style="display:none">
+    <div class="bg-gray-900 p-4 rounded">
+      <h2 class="text-xl font-bold mb-2">Top Artists</h2>
+      <ul id="top-artists"></ul>
+    </div>
+    <div class="bg-gray-900 p-4 rounded">
+      <h2 class="text-xl font-bold mb-2">Top Tracks</h2>
+      <ul id="top-tracks"></ul>
+    </div>
+    <div class="bg-gray-900 p-4 rounded">
+      <h2 class="text-xl font-bold mb-2">Top Genres</h2>
+      <ul id="top-genres"></ul>
+    </div>
+    <div class="bg-gray-900 p-4 rounded col-span-1 md:col-span-2 lg:col-span-3">
+      <h2 class="text-xl font-bold mb-2">Listening Heatmap</h2>
+      <canvas id="heatmap" height="100"></canvas>
+    </div>
+  </div>
+
   <script>
     const BACKEND_URL = "https://clarify-3zv7.onrender.com";
 
@@ -22,9 +42,7 @@
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ refresh_token: refreshToken })
         });
-
         if (!res.ok) throw new Error("Refresh failed");
-
         const data = await res.json();
         localStorage.setItem("spotify_access_token", data.access_token);
         localStorage.setItem("spotify_token_expiry", Date.now() + data.expires_in * 1000);
@@ -59,16 +77,54 @@
       return token;
     }
 
-    async function fetchSpotifyProfile(token) {
-      try {
-        const res = await fetch("https://api.spotify.com/v1/me", {
-          headers: { Authorization: `Bearer ${token}` }
+    async function fetchSpotify(endpoint, token) {
+      const res = await fetch(`https://api.spotify.com/v1/${endpoint}`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      return await res.json();
+    }
+
+    function renderList(elId, items, isTrack = false) {
+      const el = document.getElementById(elId);
+      el.innerHTML = items.map((item, i) => `
+        <li class="mb-1">${i + 1}. ${isTrack ? item.name + ' - ' + item.artists.map(a => a.name).join(', ') : item.name}</li>
+      `).join('');
+    }
+
+    function renderGenres(artists) {
+      const genreMap = {};
+      artists.forEach(artist => {
+        artist.genres.forEach(genre => {
+          genreMap[genre] = (genreMap[genre] || 0) + 1;
         });
-        return await res.json();
-      } catch (err) {
-        console.error("Spotify profile error:", err);
-        return null;
-      }
+      });
+      const sorted = Object.entries(genreMap).sort((a, b) => b[1] - a[1]).slice(0, 5);
+      document.getElementById("top-genres").innerHTML = sorted.map(([g], i) => `<li>${i + 1}. ${g}</li>`).join('');
+    }
+
+    async function renderHeatmap(token) {
+      const data = await fetchSpotify("me/player/recently-played?limit=50", token);
+      const hours = Array(24).fill(0);
+      data.items.forEach(item => {
+        const hour = new Date(item.played_at).getHours();
+        hours[hour]++;
+      });
+      const ctx = document.getElementById("heatmap").getContext("2d");
+      new Chart(ctx, {
+        type: "bar",
+        data: {
+          labels: [...Array(24).keys()].map(h => `${h}:00`),
+          datasets: [{
+            label: "Tracks Played by Hour",
+            data: hours,
+            backgroundColor: "rgba(34,197,94,0.7)"
+          }]
+        },
+        options: {
+          plugins: { legend: { display: false } },
+          scales: { x: { ticks: { color: "white" } }, y: { ticks: { color: "white" } } }
+        }
+      });
     }
 
     window.onload = async () => {
@@ -77,13 +133,20 @@
         document.getElementById("status").textContent = "Login failed or expired. Please try again.";
         return;
       }
-      const profile = await fetchSpotifyProfile(token);
-      if (profile && profile.display_name) {
+      const profile = await fetchSpotify("me", token);
+      if (profile.display_name) {
         document.getElementById("greeting").textContent = `Hi, ${profile.display_name}`;
         document.getElementById("status").textContent = "";
-      } else {
-        document.getElementById("status").textContent = "Failed to load Spotify data.";
+        document.getElementById("dashboard").style.display = "grid";
       }
+
+      const artists = await fetchSpotify("me/top/artists?limit=10", token);
+      const tracks = await fetchSpotify("me/top/tracks?limit=10", token);
+
+      renderList("top-artists", artists.items);
+      renderList("top-tracks", tracks.items, true);
+      renderGenres(artists.items);
+      renderHeatmap(token);
     };
   </script>
 </body>
