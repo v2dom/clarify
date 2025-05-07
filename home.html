@@ -16,6 +16,11 @@
       border-radius: 10px;
       padding: 20px;
       color: white;
+      transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+    .card:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 10px 15px rgba(0, 0, 0, 0.3);
     }
     .card h2 {
       font-size: 1.5rem;
@@ -33,12 +38,13 @@
       border-radius: 50%;
       margin-right: 10px;
     }
-    .now-playing img {
-      border-radius: 10px;
-      margin-bottom: 10px;
-    }
     .highlight {
       color: #22c55e;
+    }
+    .popularity-meter {
+      height: 20px;
+      border-radius: 9999px;
+      background: linear-gradient(to right, #22c55e, #facc15, #ef4444);
     }
   </style>
 </head>
@@ -49,7 +55,7 @@
   </div>
 
   <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 px-6" id="dashboard" style="display:none">
-    <div class="card">
+    <div class="card flex flex-col justify-between h-full">
       <h2>Top Artists <select id="artist-range" onchange="initializeApp()" class="bg-black text-white ml-2">
         <option value="short_term">Last 7 Days</option>
         <option value="medium_term">Last 30 Days</option>
@@ -58,7 +64,7 @@
       <ul id="top-artists"></ul>
     </div>
 
-    <div class="card">
+    <div class="card flex flex-col justify-between h-full">
       <h2>Top Tracks <select id="track-range" onchange="initializeApp()" class="bg-black text-white ml-2">
         <option value="short_term">Last 7 Days</option>
         <option value="medium_term">Last 30 Days</option>
@@ -67,78 +73,64 @@
       <ul id="top-tracks"></ul>
     </div>
 
-    <div class="flex flex-col justify-between row-span-2">
-  <div class="card h-1/2 flex items-center">
-    <div class="flex-shrink-0">
-      <img id="now-playing-img" src="" class="w-40 h-40 object-cover rounded-lg">
-    </div>
-    <div class="ml-6">
-      <h2 class="text-xl font-bold mb-2">Now Playing</h2>
-      <div id="now-playing-info">
-        <div class="text-lg font-bold highlight" id="now-playing-title"></div>
-        <div class="text-sm uppercase" id="now-playing-artist"></div>
-        <div class="text-sm text-gray-400" id="now-playing-album"></div>
+    <div class="flex flex-col justify-between row-span-2 h-full">
+      <div class="card h-1/2 flex items-center">
+        <div class="flex-shrink-0">
+          <img id="now-playing-img" src="" class="w-40 h-40 object-cover rounded-lg">
+        </div>
+        <div class="ml-6">
+          <h2 class="text-xl font-bold mb-2">Now Playing</h2>
+          <div id="now-playing-info">
+            <div class="text-lg font-bold highlight" id="now-playing-title"></div>
+            <div class="text-sm uppercase" id="now-playing-artist"></div>
+            <div class="text-sm text-gray-400" id="now-playing-album"></div>
+          </div>
+        </div>
+      </div>
+      <div class="card h-1/2 mt-4 flex-grow">
+        <h2>Top Genres</h2>
+        <ul id="top-genres"></ul>
       </div>
     </div>
+
+    <div class="card">
+      <h2>Peak Listening Hours</h2>
+      <p id="peak-hours">Loading...</p>
+    </div>
+
+    <div class="card">
+      <h2>Overall Popularity</h2>
+      <div class="mb-2 text-lg font-bold" id="popularity-score">Calculating...</div>
+      <div class="w-full bg-gray-700 rounded-full h-4">
+        <div id="popularity-bar" class="popularity-meter h-4 rounded-full w-1/2"></div>
+      </div>
+      <p id="popularity-comment" class="mt-2 text-sm text-gray-300">Analyzing your taste...</p>
+    </div>
   </div>
-  <div class="card h-1/2">
-    <h2>Top Genres</h2>
-    <ul id="top-genres"></ul>
-  </div>
-</div>
-  
-</div>
 
-    
-
-    
-
-    
-
-    
-
-    
-  </div>
   <script>
+    async function fetchSpotify(endpoint, token) {
+      const res = await fetch(`https://api.spotify.com/v1/${endpoint}`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      if (!res.ok) throw new Error(`Spotify API error: ${res.status}`);
+      return await res.json();
+    }
 
-    async function renderPopularity(token) {
+    async function renderNowPlaying(token) {
       try {
-        const data = await fetchSpotify("me/top/tracks?time_range=short_term&limit=10", token);
-        const el = document.getElementById("popularity-scores");
-        el.innerHTML = data.items.map(t => `<li>${t.name} — <span class='highlight'>${t.popularity}</span></li>`).join('');
+        const data = await fetchSpotify("me/player/currently-playing", token);
+        if (!data || !data.item) return;
+        document.getElementById("now-playing-img").src = data.item.album.images[0].url;
+        document.getElementById("now-playing-title").textContent = data.item.name;
+        document.getElementById("now-playing-artist").textContent = data.item.artists.map(a => a.name).join(', ');
+        document.getElementById("now-playing-album").textContent = data.item.album.name;
       } catch (e) {
-        console.error("Popularity render error:", e);
+        console.error("Now playing failed:", e);
       }
     }
 
-    async function renderPeakHour(token) {
-      try {
-        const data = await fetchSpotify("me/top/tracks?time_range=short_term&limit=50", token);
-        const hours = Array(24).fill(0);
-        data.items.forEach(item => {
-          const hour = new Date(item.album.release_date).getHours() || 0;
-          hours[hour]++;
-        });
-        const max = Math.max(...hours);
-        const peak = hours.findIndex(h => h === max);
-        document.getElementById("peak-hour").textContent = `${peak}:00 (${max} tracks)`;
-      } catch (e) {
-        console.error("Peak hour error:", e);
-      }
-    }
-
-    function renderTopList(elId, items, isTrack = false) {
-      const el = document.getElementById(elId);
-      el.innerHTML = items.map((item, i) => `
-        <li>
-          <img src="${isTrack ? item.album.images[0].url : item.images[0].url}" alt="cover">
-          <div>
-            <strong>${i + 1}. ${item.name}</strong>${isTrack ? `<br><small>${item.artists.map(a => a.name).join(', ')}</small>` : ''}
-          </div>
-        </li>`).join('');
-    }
-
-    function renderGenres(artists) {
+    async function renderGenres(artists) {
       const genreMap = {};
       artists.forEach(artist => {
         artist.genres.forEach(genre => {
@@ -149,138 +141,69 @@
       document.getElementById("top-genres").innerHTML = sorted.map(([g], i) => `<li>${i + 1}. ${g}</li>`).join('');
     }
 
-    async function updateTopArtists(token) {
-      const range = document.getElementById("artist-range")?.value || "short_term";
-      const data = await fetchSpotify(`me/top/artists?time_range=${range}&limit=10`, token);
-      const container = document.getElementById("top-artists");
-      container.innerHTML = data.items.map((item, i) => {
-        let style = "";
-        if (i === 0) style = 'style="color: gold"';
-        else if (i === 1) style = 'style="color: silver"';
-        else if (i === 2) style = 'style="color: #cd7f32"';
-        return `
-          <li>
-            <img src="${item.images[0].url}" alt="cover">
-            <div>
-              <strong ${style}>${i + 1}. ${item.name}</strong>
-            </div>
-          </li>`;
-      }).join("");
-      renderGenres(data.items);
-    }
-
-    async function updateTopTracks(token) {
-      const range = document.getElementById("track-range")?.value || "short_term";
-      const data = await fetchSpotify(`me/top/tracks?time_range=${range}&limit=10`, token);
-      const container = document.getElementById("top-tracks");
-      container.innerHTML = data.items.map((item, i) => {
-        let style = "";
-        if (i === 0) style = 'style="color: gold"';
-        else if (i === 1) style = 'style="color: silver"';
-        else if (i === 2) style = 'style="color: #cd7f32"';
-        return `
-          <li>
-            <img src="${item.album.images[0].url}" alt="cover">
-            <div>
-              <strong ${style}>${i + 1}. ${item.name}</strong><br>
-              <small>${item.artists.map(a => a.name).join(', ')}</small>
-            </div>
-          </li>`;
-      }).join("");
-    }
-
-    async function renderNowPlaying(token) {
+    async function initializeInsights(token) {
       try {
-        const data = await fetchSpotify("me/player/currently-playing", token);
-        if (!data || !data.item) {
-          document.getElementById("now-playing").innerHTML = '<p>No track currently playing.</p>';
-          return;
-        }
-        document.getElementById("now-playing-img").src = data.item.album.images[0].url;
-        document.getElementById("now-playing-title").textContent = data.item.name;
-        document.getElementById("now-playing-artist").textContent = data.item.artists.map(a => a.name).join(', ');
-        document.getElementById("now-playing-album").textContent = data.item.album.name;
-      } catch (e) {
-        console.error("Now playing failed:", e);
-      }
-    }
+        const [artistData, trackData] = await Promise.all([
+          fetchSpotify("me/top/artists?time_range=long_term&limit=20", token),
+          fetchSpotify("me/top/tracks?time_range=long_term&limit=20", token)
+        ]);
 
-    
-    const BACKEND_URL = "https://clarify-3zv7.onrender.com";
+        const allPopularities = [
+          ...artistData.items.map(a => a.popularity),
+          ...trackData.items.map(t => t.popularity)
+        ];
 
-    async function fetchSpotify(endpoint, token) {
-      const res = await fetch(`https://api.spotify.com/v1/${endpoint}`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      if (!res.ok) throw new Error(`Spotify API error: ${res.status}`);
-      return await res.json();
-    }
+        const avg = allPopularities.reduce((a, b) => a + b, 0) / allPopularities.length;
+        const rounded = Math.round(avg);
+        document.getElementById("popularity-score").textContent = `${rounded}/100`;
+        document.getElementById("popularity-bar").style.width = `${rounded}%`;
+        document.getElementById("popularity-comment").textContent =
+          rounded >= 75 ? 'You love the hits! Consider exploring more niche artists.' :
+          rounded >= 40 ? 'Nice balance! You’ve got a solid mix of popular and lesser-known tracks.' :
+          'Congrats! You listen to some pretty obscure music.';
 
-    async function refreshToken(refreshToken) {
-      try {
-        const res = await fetch(`${BACKEND_URL}/refresh`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ refresh_token: refreshToken })
+        const recent = await fetchSpotify("me/player/recently-played?limit=50", token);
+        const hours = Array(24).fill(0);
+        recent.items.forEach(item => {
+          const hour = new Date(item.played_at).getHours();
+          hours[hour]++;
         });
-        if (!res.ok) throw new Error("Refresh failed");
-        const data = await res.json();
-        localStorage.setItem("spotify_access_token", data.access_token);
-        localStorage.setItem("spotify_token_expiry", Date.now() + data.expires_in * 1000);
-        return data.access_token;
+        const max = Math.max(...hours);
+        const peak = hours.indexOf(max);
+        document.getElementById("peak-hours").textContent = `${peak}:00 - ${peak + 1}:00`;
       } catch (err) {
-        console.error("Refresh error:", err);
-        return null;
+        console.error("Insights error:", err);
       }
     }
 
     async function ensureAccessToken() {
-      const urlParams = new URLSearchParams(window.location.search);
-      let accessToken = urlParams.get("access_token");
-      const refreshTokenParam = urlParams.get("refresh_token");
-      const expiresIn = urlParams.get("expires_in");
-
-      if (accessToken && refreshTokenParam && expiresIn) {
-        localStorage.setItem("spotify_access_token", accessToken);
-        localStorage.setItem("spotify_refresh_token", refreshTokenParam);
-        localStorage.setItem("spotify_token_expiry", Date.now() + parseInt(expiresIn) * 1000);
+      const url = new URLSearchParams(window.location.search);
+      const at = url.get("access_token"), rt = url.get("refresh_token"), exp = url.get("expires_in");
+      if (at && rt && exp) {
+        localStorage.setItem("spotify_access_token", at);
+        localStorage.setItem("spotify_refresh_token", rt);
+        localStorage.setItem("spotify_token_expiry", Date.now() + parseInt(exp) * 1000);
         window.history.replaceState({}, document.title, window.location.pathname);
       }
-
       const token = localStorage.getItem("spotify_access_token");
       const expiry = localStorage.getItem("spotify_token_expiry");
-      const refresh = localStorage.getItem("spotify_refresh_token");
-
-      if (!token) return null;
-      if (expiry && Date.now() > expiry) {
-        return await refreshToken(refresh);
-      }
+      if (Date.now() > expiry) return null;
       return token;
     }
 
     async function initializeApp() {
       try {
         const token = await ensureAccessToken();
-        if (!token) {
-          document.getElementById("status").textContent = "Login failed or expired. Please try again.";
-          return;
-        }
+        if (!token) return;
         const profile = await fetchSpotify("me", token);
         document.getElementById("greeting").textContent = `Hi, ${profile.display_name}`;
-        document.getElementById("status").textContent = "";
         document.getElementById("dashboard").style.display = "grid";
-
-                updateTopArtists(token);
-        updateTopTracks(token);
         renderNowPlaying(token);
-
-      } catch (error) {
-        console.error("Initialization error:", error);
-        document.getElementById("status").textContent = "Failed to load data.";
+        initializeInsights(token);
+      } catch (e) {
+        console.error("Init error:", e);
       }
     }
-
-      
 
     window.onload = initializeApp;
   </script>
