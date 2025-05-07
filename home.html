@@ -122,11 +122,16 @@
     document.getElementById("status").textContent = "Clarify - by v2dom";
 
     async function fetchSpotify(endpoint, token) {
-      const res = await fetch(`https://api.spotify.com/v1/${endpoint}`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      if (!res.ok) throw new Error(`Spotify API error: ${res.status}`);
-      return await res.json();
+  const res = await fetch(`https://api.spotify.com/v1/${endpoint}`, {
+    headers: { Authorization: `Bearer ${token}` }
+  });
+  if (res.status === 401) {
+    localStorage.removeItem("spotify_access_token");
+    window.location.href = "/clarify";
+    return;
+  }
+  if (!res.ok) throw new Error(`Spotify API error: ${res.status}`);
+  return await res.json();
     }
 
     async function renderNowPlaying(token) {
