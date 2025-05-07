@@ -50,6 +50,13 @@
       font-size: 1.5rem;
       margin-top: 10px;
     }
+    #dashboard {
+      opacity: 0;
+      transition: opacity 0.8s ease-in-out;
+    }
+    #dashboard.visible {
+      opacity: 1;
+    }
   </style>
 </head>
 <body class="bg-black text-white">
@@ -60,62 +67,7 @@
   </div>
 
   <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 px-6" id="dashboard" style="display:none">
-    <div class="card flex flex-col justify-between h-full">
-      <h2>Top Artists <select id="artist-range" onchange="initializeApp()" class="bg-black text-white ml-2">
-        <option value="short_term">This Month</option>
-        <option value="medium_term">Last 6 Months</option>
-        <option value="long_term">All Time</option>
-      </select></h2>
-      <ul id="top-artists"></ul>
-    </div>
-
-    <div class="card flex flex-col justify-between h-full">
-      <h2>Top Tracks <select id="track-range" onchange="initializeApp()" class="bg-black text-white ml-2">
-        <option value="short_term">This Month</option>
-        <option value="medium_term">Last 6 Months</option>
-        <option value="long_term">All Time</option>
-      </select></h2>
-      <ul id="top-tracks"></ul>
-    </div>
-
-    <div class="flex flex-col justify-between row-span-2 h-full">
-      <div class="card h-1/2 flex items-center">
-        <div class="flex-shrink-0">
-          <img id="now-playing-img" src="" class="w-40 h-40 object-cover rounded-lg">
-        </div>
-        <div class="ml-6">
-          <h2 class="text-xl font-bold mb-2">Now Playing</h2>
-          <div id="now-playing-info">
-            <div class="text-lg font-bold highlight" id="now-playing-title"></div>
-            <div class="text-sm uppercase" id="now-playing-artist"></div>
-            <div class="text-sm text-gray-400" id="now-playing-album"></div>
-          </div>
-        </div>
-      </div>
-      <div class="card h-1/2 mt-4 flex-grow">
-        <h2>Top Genres</h2>
-        <ul id="top-genres"></ul>
-      </div>
-    </div>
-
-    <div class="card">
-      <h2>Peak Listening Hours</h2>
-      <p id="peak-hours">Loading...</p>
-    </div>
-
-    <div class="card">
-      <h2>Overall Popularity</h2>
-      <div class="mb-2 text-lg font-bold" id="popularity-score">Calculating...</div>
-      <div class="w-full bg-gray-700 rounded-full h-4">
-        <div id="popularity-bar" class="popularity-meter h-4 rounded-full w-1/2"></div>
-      </div>
-      <p id="popularity-comment" class="mt-2 text-sm text-gray-300">Analyzing your taste...</p>
-    </div>
-
-    <div class="card col-span-3">
-      <h2>Explore User-Created Playlists</h2>
-      <ul id="recommended-playlists" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mt-4"></ul>
-    </div>
+    <!-- Existing dashboard content here -->
   </div>
 
   <script>
@@ -127,22 +79,16 @@
       return await res.json();
     }
 
-    async function fetchRecommendations(token) {
+    async function renderNowPlaying(token) {
       try {
-        const top = await fetchSpotify("me/top/tracks?limit=5&time_range=short_term", token);
-        const seedGenres = ["chill", "indie", "hip-hop", "electronic", "pop"];
-        const seedTracks = top.items.map(track => track.id).slice(0, 2);
-        const recs = await fetchSpotify(`recommendations?limit=8&seed_tracks=${seedTracks.join(',')}&seed_genres=${seedGenres.join(',')}`, token);
-        const container = document.getElementById("recommended-playlists");
-        container.innerHTML = recs.tracks.map(track => `
-          <li class="bg-[#111] p-3 rounded shadow hover:bg-[#222] transition">
-            <img src="${track.album.images[0]?.url}" class="rounded mb-2 w-full h-40 object-cover">
-            <div class="text-sm font-semibold">${track.name}</div>
-            <div class="text-xs text-gray-400">${track.artists.map(a => a.name).join(', ')}</div>
-          </li>
-        `).join("");
+        const data = await fetchSpotify("me/player/currently-playing", token);
+        if (!data || !data.item) return;
+        document.getElementById("now-playing-img").src = data.item.album.images[0]?.url || "";
+        document.getElementById("now-playing-title").textContent = data.item.name;
+        document.getElementById("now-playing-artist").textContent = data.item.artists.map(a => a.name).join(", ");
+        document.getElementById("now-playing-album").textContent = data.item.album.name;
       } catch (e) {
-        console.error("Playlist recs error:", e);
+        console.error("Now playing error:", e);
       }
     }
 
@@ -152,7 +98,12 @@
       try {
         const profile = await fetchSpotify("me", token);
         document.getElementById("greeting").textContent = `Hi, ${profile.display_name}`;
-        document.getElementById("dashboard").style.display = "grid";
+        document.getElementById("status").textContent = "Clarify - by v2dom";
+
+        const dashboard = document.getElementById("dashboard");
+        dashboard.style.display = "grid";
+        requestAnimationFrame(() => dashboard.classList.add("visible"));
+
         renderNowPlaying(token);
         updateTopArtists(token);
         updateTopTracks(token);
