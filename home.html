@@ -6,148 +6,139 @@
   <title>Clarify - Spotify Insights</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700&display=swap" rel="stylesheet">
+  <style>
+    body {
+      font-family: 'Montserrat', sans-serif;
+    }
+    .card {
+      background-color: #1e1f22;
+      border-radius: 10px;
+      padding: 20px;
+      color: white;
+    }
+    .card h2 {
+      font-size: 1.5rem;
+      font-weight: bold;
+      margin-bottom: 10px;
+    }
+    .card ul li {
+      display: flex;
+      align-items: center;
+      margin-bottom: 10px;
+    }
+    .card ul li img {
+      width: 50px;
+      height: 50px;
+      border-radius: 50%;
+      margin-right: 10px;
+    }
+    .now-playing img {
+      border-radius: 10px;
+      margin-bottom: 10px;
+    }
+    .highlight {
+      color: #22c55e;
+    }
+  </style>
 </head>
-<body class="bg-black text-white font-sans">
+<body class="bg-black text-white">
   <div class="text-center p-6">
     <h1 class="text-4xl font-bold text-green-500" id="greeting">Welcome to Clarify</h1>
     <p class="text-xl mt-2" id="status">Loading Spotify data...</p>
   </div>
 
   <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 px-6" id="dashboard" style="display:none">
-    <div class="bg-gray-900 p-4 rounded">
-      <h2 class="text-xl font-bold mb-2">Top Artists</h2>
+    <div class="card">
+      <h2>Top Artists <select id="artist-range" onchange="updateTopArtists()" class="bg-black text-white ml-2">
+        <option value="short_term">Last 7 Days</option>
+        <option value="medium_term">Last 30 Days</option>
+        <option value="long_term">All Time</option>
+      </select></h2>
       <ul id="top-artists"></ul>
     </div>
-    <div class="bg-gray-900 p-4 rounded">
-      <h2 class="text-xl font-bold mb-2">Top Tracks</h2>
+
+    <div class="card">
+      <h2>Top Tracks <select id="track-range" onchange="updateTopTracks()" class="bg-black text-white ml-2">
+        <option value="short_term">Last 7 Days</option>
+        <option value="medium_term">Last 30 Days</option>
+        <option value="long_term">All Time</option>
+      </select></h2>
       <ul id="top-tracks"></ul>
     </div>
-    <div class="bg-gray-900 p-4 rounded">
-      <h2 class="text-xl font-bold mb-2">Top Genres</h2>
+
+    <div class="card">
+      <h2>Now Playing</h2>
+      <div class="now-playing text-center" id="now-playing"></div>
+      <div class="flex justify-center gap-4 mt-4">
+        <button onclick="controlPlayback('previous')" class="bg-gray-700 px-4 py-2 rounded">⏮️</button>
+        <button onclick="controlPlayback('play-pause')" class="bg-gray-700 px-4 py-2 rounded">⏯️</button>
+        <button onclick="controlPlayback('next')" class="bg-gray-700 px-4 py-2 rounded">⏭️</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>Top Genres</h2>
       <ul id="top-genres"></ul>
     </div>
-    <div class="bg-gray-900 p-4 rounded col-span-1 md:col-span-2 lg:col-span-3">
-      <h2 class="text-xl font-bold mb-2">Listening Heatmap</h2>
+
+    <div class="card col-span-1 md:col-span-2 lg:col-span-3">
+      <h2>Listening Heatmap</h2>
       <canvas id="heatmap" height="100"></canvas>
+    </div>
+
+    <div class="card col-span-1 md:col-span-2 lg:col-span-3">
+      <h2>Generate Playlist</h2>
+      <button onclick="generatePlaylist()" class="bg-green-600 hover:bg-green-700 text-white px-6 py-2 rounded mt-2">Create Playlist from Top Tracks</button>
+      <p id="playlist-result" class="mt-2 text-sm text-green-400"></p>
     </div>
   </div>
 
   <script>
-    const BACKEND_URL = "https://clarify-3zv7.onrender.com";
-
-    async function refreshToken(refreshToken) {
-      try {
-        const res = await fetch(`${BACKEND_URL}/refresh`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ refresh_token: refreshToken })
-        });
-        if (!res.ok) throw new Error("Refresh failed");
-        const data = await res.json();
-        localStorage.setItem("spotify_access_token", data.access_token);
-        localStorage.setItem("spotify_token_expiry", Date.now() + data.expires_in * 1000);
-        return data.access_token;
-      } catch (err) {
-        console.error("Refresh error:", err);
-        return null;
-      }
-    }
-
-    async function ensureAccessToken() {
-      const urlParams = new URLSearchParams(window.location.search);
-      let accessToken = urlParams.get("access_token");
-      const refreshTokenParam = urlParams.get("refresh_token");
-      const expiresIn = urlParams.get("expires_in");
-
-      if (accessToken && refreshTokenParam && expiresIn) {
-        localStorage.setItem("spotify_access_token", accessToken);
-        localStorage.setItem("spotify_refresh_token", refreshTokenParam);
-        localStorage.setItem("spotify_token_expiry", Date.now() + parseInt(expiresIn) * 1000);
-        window.history.replaceState({}, document.title, window.location.pathname);
-      }
-
+    async function controlPlayback(action) {
       const token = localStorage.getItem("spotify_access_token");
-      const expiry = localStorage.getItem("spotify_token_expiry");
-      const refresh = localStorage.getItem("spotify_refresh_token");
+      let endpoint = "";
 
-      if (!token) return null;
-      if (expiry && Date.now() > expiry) {
-        return await refreshToken(refresh);
+      if (action === 'previous') endpoint = 'me/player/previous';
+      else if (action === 'next') endpoint = 'me/player/next';
+      else if (action === 'play-pause') {
+        const state = await fetchSpotify('me/player', token);
+        endpoint = state && state.is_playing ? 'me/player/pause' : 'me/player/play';
       }
-      return token;
+
+      fetch(`https://api.spotify.com/v1/${endpoint}`, {
+        method: 'POST',
+        headers: { 'Authorization': `Bearer ${token}` }
+      }).then(() => renderNowPlaying(token));
     }
 
-    async function fetchSpotify(endpoint, token) {
-      const res = await fetch(`https://api.spotify.com/v1/${endpoint}`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      return await res.json();
-    }
+    async function generatePlaylist() {
+      const token = localStorage.getItem("spotify_access_token");
+      const topTracks = await fetchSpotify("me/top/tracks?limit=10", token);
+      const user = await fetchSpotify("me", token);
+      const uris = topTracks.items.map(t => t.uri);
 
-    function renderList(elId, items, isTrack = false) {
-      const el = document.getElementById(elId);
-      el.innerHTML = items.map((item, i) => `
-        <li class="mb-1">${i + 1}. ${isTrack ? item.name + ' - ' + item.artists.map(a => a.name).join(', ') : item.name}</li>
-      `).join('');
-    }
-
-    function renderGenres(artists) {
-      const genreMap = {};
-      artists.forEach(artist => {
-        artist.genres.forEach(genre => {
-          genreMap[genre] = (genreMap[genre] || 0) + 1;
-        });
-      });
-      const sorted = Object.entries(genreMap).sort((a, b) => b[1] - a[1]).slice(0, 5);
-      document.getElementById("top-genres").innerHTML = sorted.map(([g], i) => `<li>${i + 1}. ${g}</li>`).join('');
-    }
-
-    async function renderHeatmap(token) {
-      const data = await fetchSpotify("me/player/recently-played?limit=50", token);
-      const hours = Array(24).fill(0);
-      data.items.forEach(item => {
-        const hour = new Date(item.played_at).getHours();
-        hours[hour]++;
-      });
-      const ctx = document.getElementById("heatmap").getContext("2d");
-      new Chart(ctx, {
-        type: "bar",
-        data: {
-          labels: [...Array(24).keys()].map(h => `${h}:00`),
-          datasets: [{
-            label: "Tracks Played by Hour",
-            data: hours,
-            backgroundColor: "rgba(34,197,94,0.7)"
-          }]
+      const playlist = await fetch("https://api.spotify.com/v1/users/" + user.id + "/playlists", {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json"
         },
-        options: {
-          plugins: { legend: { display: false } },
-          scales: { x: { ticks: { color: "white" } }, y: { ticks: { color: "white" } } }
-        }
+        body: JSON.stringify({
+          name: "Clarify - Top Tracks",
+          description: "Auto-generated playlist from Clarify dashboard",
+          public: false
+        })
+      }).then(res => res.json());
+
+      await fetch(`https://api.spotify.com/v1/playlists/${playlist.id}/tracks`, {
+        method: "POST",
+        headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
+        body: JSON.stringify({ uris })
       });
+
+      document.getElementById("playlist-result").textContent = `✅ Playlist created: ${playlist.name}`;
     }
-
-    window.onload = async () => {
-      const token = await ensureAccessToken();
-      if (!token) {
-        document.getElementById("status").textContent = "Login failed or expired. Please try again.";
-        return;
-      }
-      const profile = await fetchSpotify("me", token);
-      if (profile.display_name) {
-        document.getElementById("greeting").textContent = `Hi, ${profile.display_name}`;
-        document.getElementById("status").textContent = "";
-        document.getElementById("dashboard").style.display = "grid";
-      }
-
-      const artists = await fetchSpotify("me/top/artists?limit=10", token);
-      const tracks = await fetchSpotify("me/top/tracks?limit=10", token);
-
-      renderList("top-artists", artists.items);
-      renderList("top-tracks", tracks.items, true);
-      renderGenres(artists.items);
-      renderHeatmap(token);
-    };
   </script>
 </body>
 </html>
