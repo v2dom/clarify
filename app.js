@@ -1,8 +1,14 @@
 // clarify_backend_app.js
 const express = require('express');
 const axios = require('axios');
+const cors = require('cors');
 const app = express();
 require('dotenv').config();
+
+app.use(cors({
+  origin: 'https://v2dom.dev',
+  credentials: true
+}));
 
 app.use(express.json());
 
@@ -42,6 +48,7 @@ app.get('/callback', async (req, res) => {
     redirectUrl.searchParams.set('access_token', access_token);
     redirectUrl.searchParams.set('refresh_token', refresh_token);
     redirectUrl.searchParams.set('expires_in', expires_in);
+    console.log('Redirecting to:', redirectUrl.toString());
     res.redirect(redirectUrl.toString());
   } catch (error) {
     console.error('Token exchange failed:', error.response?.data || error.message);
