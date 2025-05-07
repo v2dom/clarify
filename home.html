@@ -4,35 +4,8 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Clarify - Spotify Insights</title>
-  <script src="https://cdn.tailwindcss.com">    async function renderPopularity(token) {
-      try {
-        const data = await fetchSpotify("me/top/tracks?time_range=short_term&limit=10", token);
-        const el = document.getElementById("popularity-scores");
-        el.innerHTML = data.items.map(t => `<li>${t.name} — <span class='highlight'>${t.popularity}</span></li>`).join('');
-      } catch (e) {
-        console.error("Popularity render error:", e);
-      }
-    }
+  <script src="https://cdn.tailwindcss.com"></script>
 
-    async function renderPeakHour(token) {
-      try {
-        const data = await fetchSpotify("me/top/tracks?time_range=short_term&limit=50", token);
-        const hours = Array(24).fill(0);
-        data.items.forEach(item => {
-          const hour = new Date(item.album.release_date).getHours() || 0;
-          hours[hour]++;
-        });
-        const max = Math.max(...hours);
-        const peak = hours.findIndex(h => h === max);
-        document.getElementById("peak-hour").textContent = `${peak}:00 (${max} tracks)`;
-      } catch (e) {
-        console.error("Peak hour error:", e);
-      }
-    }
-  </script>
-<script>
-$1
-</script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700&display=swap" rel="stylesheet">
   <style>
@@ -105,23 +78,6 @@ $1
       <ul id="top-genres"></ul>
     </div>
 
-    <div class="card">
-      <h2>Popularity Scores</h2>
-      <ul id="popularity-scores"></ul>
-    </div>
-
-    <div class="card">
-      <h2>Peak Listening Hour</h2>
-      <p id="peak-hour" class="text-lg mt-2"></p>
-    </div>
-
-    <div class="card col-span-1 md:col-span-2 lg:col-span-3">
-      <h2>Listening Heatmap</h2>
-      <canvas id="heatmap" height="100"></canvas>
-        </div>
-
-    
-
     <div class="card col-span-1 md:col-span-2 lg:col-span-3">
       <h2>Generate Playlist</h2>
       <button onclick="generatePlaylist()" class="bg-green-600 hover:bg-green-700 text-white px-6 py-2 rounded mt-2">Create Playlist from Top Tracks</button>
@@ -193,20 +149,20 @@ $1
     }
 
     async function renderNowPlaying(token) {
-      try {
-        const data = await fetchSpotify("me/player/currently-playing", token);
-        if (!data || !data.item) {
-          document.getElementById("now-playing").innerHTML = '<p>No track currently playing.</p>';
-          return;
-        }
-        document.getElementById("now-playing").innerHTML = `
-          <img src="${data.item.album.images[0].url}" class="w-40 mx-auto">
-          <div class="mt-2 text-lg font-bold highlight">${data.item.name}</div>
-          <div class="text-sm uppercase">${data.item.artists.map(a => a.name).join(', ')}</div>
-          <div class="text-sm text-gray-400">${data.item.album.name}</div>
-        `;
-      } catch (e) {
-        console.error("Now playing failed:", e);
+  try {
+    const data = await fetchSpotify("me/player/currently-playing", token);
+    const nowPlaying = document.getElementById("now-playing");
+    if (!data || !data.item) {
+      nowPlaying.innerHTML = '<p>No track currently playing.</p>';
+      return;
+    }
+    nowPlaying.innerHTML = `
+      <img src="${data.item.album.images[0].url}" class="w-40 mx-auto">
+      <div class="mt-2 text-lg font-bold highlight">${data.item.name}</div>
+      <div class="text-sm uppercase">${data.item.artists.map(a => a.name).join(', ')}</div>
+      <div class="text-sm text-gray-400">${data.item.album.name}</div>
+    `;
+    return;
       }
     }
 
@@ -216,7 +172,8 @@ $1
     if (!data.items) return;
     const hours = Array(24).fill(0);
     data.items.forEach(item => {
-      const hour = new Date(item.album.release_date).getHours() || 0;
+      const releaseDate = new Date(item.album.release_date);
+      const hour = !isNaN(releaseDate.getHours()) ? releaseDate.getHours() : 0;
       hours[hour]++;
     });
     const ctx = document.getElementById("heatmap").getContext("2d");
@@ -233,7 +190,7 @@ $1
       options: {
         plugins: { legend: { display: false } },
         scales: { x: { ticks: { color: "white" } }, y: { ticks: { color: "white" } } }
-      }
+            }
     });
   } catch (e) {
     console.error("Heatmap error:", e);
@@ -307,9 +264,9 @@ $1
                 updateTopArtists(token);
         updateTopTracks(token);
         renderNowPlaying(token);
-        renderHeatmap(token);
-        renderPopularity(token);
-        renderPeakHour(token);
+        
+        
+        
 
       } catch (error) {
         console.error("Initialization error:", error);
