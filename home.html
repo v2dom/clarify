@@ -109,12 +109,48 @@
   </div>
 
   <script>
+    if (!localStorage.getItem("spotify_access_token")) {
+      window.location.href = "/clarify";
+    }
+
     async function fetchSpotify(endpoint, token) {
       const res = await fetch(`https://api.spotify.com/v1/${endpoint}`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       if (!res.ok) throw new Error(`Spotify API error: ${res.status}`);
       return await res.json();
+    }
+
+    async function updateTopArtists(token) {
+      const range = document.getElementById("artist-range")?.value || "short_term";
+      const data = await fetchSpotify(`me/top/artists?time_range=${range}&limit=10`, token);
+      document.getElementById("top-artists").innerHTML = data.items.map((item, i) => {
+        let style = i === 0 ? 'color: gold' : i === 1 ? 'color: silver' : i === 2 ? 'color: #cd7f32' : '';
+        return `
+          <li>
+            <img src="${item.images[0].url}" alt="cover">
+            <div>
+              <strong style="${style}">${i + 1}. ${item.name}</strong>
+            </div>
+          </li>`;
+      }).join("");
+      renderGenres(data.items);
+    }
+
+    async function updateTopTracks(token) {
+      const range = document.getElementById("track-range")?.value || "short_term";
+      const data = await fetchSpotify(`me/top/tracks?time_range=${range}&limit=10`, token);
+      document.getElementById("top-tracks").innerHTML = data.items.map((item, i) => {
+        let style = i === 0 ? 'color: gold' : i === 1 ? 'color: silver' : i === 2 ? 'color: #cd7f32' : '';
+        return `
+          <li>
+            <img src="${item.album.images[0].url}" alt="cover">
+            <div>
+              <strong style="${style}">${i + 1}. ${item.name}</strong><br>
+              <small>${item.artists.map(a => a.name).join(', ')}</small>
+            </div>
+          </li>`;
+      }).join("");
     }
 
     async function renderNowPlaying(token) {
@@ -199,6 +235,8 @@
         document.getElementById("greeting").textContent = `Hi, ${profile.display_name}`;
         document.getElementById("dashboard").style.display = "grid";
         renderNowPlaying(token);
+        updateTopArtists(token);
+        updateTopTracks(token);
         initializeInsights(token);
       } catch (e) {
         console.error("Init error:", e);
