@@ -46,19 +46,24 @@
       border-radius: 9999px;
       background: linear-gradient(to right, #22c55e, #facc15, #ef4444);
     }
+    #peak-hours {
+      font-size: 1.25rem;
+      margin-top: 10px;
+    }
   </style>
 </head>
 <body class="bg-black text-white">
   <div class="text-center p-6">
     <h1 class="text-4xl font-bold text-green-500" id="greeting">Welcome to Clarify</h1>
     <p class="text-xl mt-2" id="status">Loading Spotify data...</p>
+    <a href="/clarify" class="text-green-400 underline text-sm">Back to Login</a>
   </div>
 
   <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 px-6" id="dashboard" style="display:none">
     <div class="card flex flex-col justify-between h-full">
       <h2>Top Artists <select id="artist-range" onchange="initializeApp()" class="bg-black text-white ml-2">
-        <option value="short_term">Last 7 Days</option>
-        <option value="medium_term">Last 30 Days</option>
+        <option value="short_term">This Month</option>
+        <option value="medium_term">Last 6 Months</option>
         <option value="long_term">All Time</option>
       </select></h2>
       <ul id="top-artists"></ul>
@@ -66,8 +71,8 @@
 
     <div class="card flex flex-col justify-between h-full">
       <h2>Top Tracks <select id="track-range" onchange="initializeApp()" class="bg-black text-white ml-2">
-        <option value="short_term">Last 7 Days</option>
-        <option value="medium_term">Last 30 Days</option>
+        <option value="short_term">This Month</option>
+        <option value="medium_term">Last 6 Months</option>
         <option value="long_term">All Time</option>
       </select></h2>
       <ul id="top-tracks"></ul>
@@ -206,7 +211,7 @@
         });
         const max = Math.max(...hours);
         const peak = hours.indexOf(max);
-        document.getElementById("peak-hours").textContent = `${peak}:00 - ${peak + 1}:00`;
+        document.getElementById("peak-hours").textContent = `${peak}:00 - ${peak + 1}:00  •  ${max} tracks`;
       } catch (err) {
         console.error("Insights error:", err);
       }
