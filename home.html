@@ -67,9 +67,24 @@
       <ul id="top-tracks"></ul>
     </div>
 
-    <div class="card col-span-1 md:col-span-2 lg:col-span-3 flex flex-col items-center justify-center">
-  <h2>Now Playing</h2>
-  <div class="now-playing text-center w-full" id="now-playing"></div>
+    <div class="card row-span-1 lg:row-span-2 flex items-center justify-start">
+  <div class="flex-shrink-0">
+    <img id="now-playing-img" src="" class="w-40 h-40 object-cover rounded-lg">
+  </div>
+  <div class="ml-6">
+    <h2 class="text-xl font-bold mb-2">Now Playing</h2>
+    <div id="now-playing-info">
+      <div class="text-lg font-bold highlight" id="now-playing-title"></div>
+      <div class="text-sm uppercase" id="now-playing-artist"></div>
+      <div class="text-sm text-gray-400" id="now-playing-album"></div>
+    </div>
+  </div>
+</div>
+
+<div class="card">
+  <h2>Top Genres</h2>
+  <ul id="top-genres"></ul>
+</div>
   <div class="mt-6 w-full">
     <h2>Top Genres</h2>
     <ul id="top-genres"></ul>
@@ -183,16 +198,15 @@
           document.getElementById("now-playing").innerHTML = '<p>No track currently playing.</p>';
           return;
         }
-        document.getElementById("now-playing").innerHTML = `
-          <img src="${data.item.album.images[0].url}" class="w-40 mx-auto">
-          <div class="mt-2 text-lg font-bold highlight">${data.item.name}</div>
-          <div class="text-sm uppercase">${data.item.artists.map(a => a.name).join(', ')}</div>
-          <div class="text-sm text-gray-400">${data.item.album.name}</div>
-        `;
+        document.getElementById("now-playing-img").src = data.item.album.images[0].url;
+        document.getElementById("now-playing-title").textContent = data.item.name;
+        document.getElementById("now-playing-artist").textContent = data.item.artists.map(a => a.name).join(', ');
+        document.getElementById("now-playing-album").textContent = data.item.album.name;
       } catch (e) {
         console.error("Now playing failed:", e);
       }
     }
+
     
     const BACKEND_URL = "https://clarify-3zv7.onrender.com";
 
@@ -245,6 +259,7 @@
       }
       return token;
     }
+
     async function initializeApp() {
       try {
         const token = await ensureAccessToken();
@@ -266,6 +281,8 @@
         document.getElementById("status").textContent = "Failed to load data.";
       }
     }
+
+      
 
     window.onload = initializeApp;
   </script>
