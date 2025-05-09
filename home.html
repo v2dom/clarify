@@ -79,10 +79,26 @@
     </div>
 
     <div class="flex flex-col justify-between row-span-2 h-full">
-      <div class="card h-1/2 flex items-center">
-        <div class="flex-shrink-0">
-          <img id="now-playing-img" src="" class="w-40 h-40 object-cover rounded-lg">
-        </div>
+      <div class="card h-full flex flex-col items-center text-center">
+  <h2 class="text-xl font-bold mb-4">Now Playing</h2>
+  <img id="now-playing-img" src="" class="w-64 h-64 object-cover rounded-lg mb-4">
+  <div id="now-playing-info">
+    <div class="text-lg font-bold highlight" id="now-playing-title"></div>
+    <div class="text-md uppercase font-semibold" id="now-playing-artist"></div>
+    <div class="text-sm text-gray-400" id="now-playing-album"></div>
+  </div>
+  <div class="flex items-center gap-6 mt-4">
+    <button id="skip-btn">
+      <img src="https://www.svgrepo.com/show/23146/fast-forward-arrowhead-symbol.svg" alt="Skip" class="w-6 h-6">
+    </button>
+    <button id="pause-btn" style="display: none;">
+      <img src="https://www.svgrepo.com/show/176023/music-pause-button-pair-of-lines.svg" alt="Pause" class="w-6 h-6">
+    </button>
+    <button id="play-btn">
+      <img src="https://www.svgrepo.com/show/164900/play-button-arrowhead.svg" alt="Play" class="w-6 h-6">
+    </button>
+  </div>
+</div>
         <div class="ml-6">
           <h2 class="text-xl font-bold mb-2">Now Playing</h2>
           <div id="now-playing-info">
@@ -142,22 +158,25 @@
     }
 
     async function renderNowPlaying(token) {
-      try {
-        const data = await fetchSpotify("me/player/currently-playing", token);
-        if (!data || !data.item) return;
-        const img = document.getElementById("now-playing-img");
-        const title = document.getElementById("now-playing-title");
-        const artist = document.getElementById("now-playing-artist");
-        const album = document.getElementById("now-playing-album");
-        if (!img || !title || !artist || !album) return;
-        img.src = data.item.album.images[0]?.url || "";
-        title.textContent = data.item.name;
-        artist.textContent = data.item.artists.map(a => a.name).join(", ");
-        album.textContent = data.item.album.name;
-      } catch (e) {
-        console.error("Now playing error:", e);
-      }
-    }
+  try {
+    const data = await fetchSpotify("me/player/currently-playing", token);
+    if (!data || !data.item) return;
+    const img = document.getElementById("now-playing-img");
+    const title = document.getElementById("now-playing-title");
+    const artist = document.getElementById("now-playing-artist");
+    const album = document.getElementById("now-playing-album");
+    const isPlaying = data.is_playing;
+
+    img.src = data.item.album.images[0]?.url || "";
+    title.textContent = data.item.name;
+    artist.textContent = data.item.artists.map(a => a.name).join(", ");
+    album.textContent = data.item.album.name;
+
+    document.getElementById("play-btn").style.display = isPlaying ? "none" : "inline";
+    document.getElementById("pause-btn").style.display = isPlaying ? "inline" : "none";
+  } catch (e) {
+    console.error("Now playing error:", e);
+  }}
 
     async function updateTopGenres(token) {
       try {
@@ -306,6 +325,37 @@
 
     window.onload = initializeApp;
 
+    // Playback controls
+    const token = localStorage.getItem("spotify_access_token");
+
+    const play = async () => {
+      await fetch("https://api.spotify.com/v1/me/player/play", {
+        method: "PUT",
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      renderNowPlaying(token);
+    };
+
+    const pause = async () => {
+      await fetch("https://api.spotify.com/v1/me/player/pause", {
+        method: "PUT",
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      renderNowPlaying(token);
+    };
+
+    const skip = async () => {
+      await fetch("https://api.spotify.com/v1/me/player/next", {
+        method: "POST",
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      renderNowPlaying(token);
+    };
+
+    document.getElementById("play-btn").addEventListener("click", play);
+    document.getElementById("pause-btn").addEventListener("click", pause);
+    document.getElementById("skip-btn").addEventListener("click", skip);
+
     async function updateTopArtists(token) {
       const range = document.getElementById("artist-range")?.value || "short_term";
       const data = await fetchSpotify(`me/top/artists?time_range=${range}&limit=10`, token);
@@ -356,6 +406,70 @@
         document.getElementById("popularity-comment").textContent = avgPop > 80 ? "Mainstream lover!" : avgPop < 40 ? "Obscure taste detected 👀" : "Nice balance! You've got a solid mix of popular and lesser-known tracks.";
       } catch (e) {
         console.error("Insights error:", e);
+      }
+    }
+    async function fetchRecommendations(token) {
+      try {
+        const topArtists = await fetchSpotify("me/top/artists?time_range=long_term&limit=10", token);
+        const topTracks = await fetchSpotify("me/top/tracks?time_range=long_term&limit=10", token);
+
+        const seedGenres = [];
+        const seedArtists = [];
+        const seedTracks = [];
+
+        topArtists.items.forEach(artist => {
+          artist.genres.forEach(genre => {
+            if (!seedGenres.includes(genre) && seedGenres.length < 5) seedGenres.push(genre);
+          });
+          if (!seedArtists.includes(artist.id) && seedArtists.length < 2) seedArtists.push(artist.id);
+        });
+
+        topTracks.items.forEach(track => {
+          if (!seedTracks.includes(track.id) && seedTracks.length < 2) seedTracks.push(track.id);
+        });
+
+        const queryParts = [...seedGenres.map(g => `genre:\"${g}\"`),
+                            ...seedArtists.map(a => `artist:${a}`),
+                            ...seedTracks.map(t => `track:${t}`)];
+        const query = queryParts.join(" OR ") || "genre:pop";
+        const data = await fetchSpotify(`search?q=${encodeURIComponent(query)}&type=playlist&limit=6`, token);
+
+        const container = document.getElementById("recommended-playlists");
+        const playlists = await Promise.all(data.playlists.items.map(async (pl) => {
+          let imageUrl = "https://via.placeholder.com/300x300?text=No+Image";
+          let matchedBy = "related to your taste";
+          try {
+            const imgRes = await fetch(`https://api.spotify.com/v1/playlists/${pl.id}/images`, {
+              headers: { Authorization: `Bearer ${token}` }
+            });
+            const imgData = await imgRes.json();
+            if (Array.isArray(imgData) && imgData.length > 0) {
+              imageUrl = imgData[0].url;
+            }
+          } catch (err) {
+            console.warn(`No image found for playlist ${pl.id}`, err);
+          }
+
+          const lowerName = pl.name.toLowerCase();
+          const match = [...seedGenres, ...seedArtists, ...seedTracks].find(seed => lowerName.includes(seed.toLowerCase()));
+          if (match) {
+            if (seedGenres.includes(match)) matchedBy = `genre: ${match}`;
+            else if (seedArtists.includes(match)) matchedBy = `artist ID: ${match}`;
+            else if (seedTracks.includes(match)) matchedBy = `track ID: ${match}`;
+          }
+
+          return `
+            <li class="bg-[#111] p-4 rounded shadow">
+              <img src="${imageUrl}" class="rounded mb-2">
+              <p class="font-bold text-sm">${pl.name}</p>
+              <p class="text-xs text-gray-400">Matched by: ${matchedBy}</p>
+              <a href="${pl.external_urls.spotify}" target="_blank" class="text-green-400 text-xs">Open on Spotify</a>
+            </li>`;
+        }));
+
+        container.innerHTML = playlists.join("");
+      } catch (e) {
+        console.error("Recommendation error:", e);
       }
     }
   </script>
