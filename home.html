@@ -94,7 +94,7 @@
       </div>
       <div class="card h-1/2 mt-4 flex-grow">
         <h2>Top Genres</h2>
-        <ul id="top-genres"></ul>
+        <div id="top-genres" class="flex flex-wrap gap-2 mt-4"></div>
       </div>
     </div>
 
@@ -161,26 +161,49 @@
 
     async function updateTopGenres(token) {
       try {
-        const data = await fetchSpotify(`me/top/artists?time_range=long_term&limit=20`, token);
+        const seedGenres = [];
+        const seedArtists = [];
         const genreCount = {};
         data.items.forEach(artist => {
           artist.genres.forEach(genre => {
-        if (!seedGenres.includes(genre) && seedGenres.length < 5) {
-          seedGenres.push(genre);
-        }
-      });
+            genreCount[genre] = (genreCount[genre] || 0) + 1;
+            if (!seedGenres.includes(genre) && seedGenres.length < 5) {
+              seedGenres.push(genre);
+            }
+          });
+          if (!seedArtists.includes(artist.id) && seedArtists.length < 2) {
+            seedArtists.push(artist.id);
+          }
       if (!seedArtists.includes(artist.id) && seedArtists.length < 2) {
         seedArtists.push(artist.id);
       }
         });
         const sortedGenres = Object.entries(genreCount)
           .sort((a, b) => b[1] - a[1])
-          .slice(0, 10);
+          .slice(0, 15);
 
         const container = document.getElementById("top-genres");
-        container.innerHTML = sortedGenres.map(([genre, count]) =>
-          `<li><span class="highlight">${genre}</span> (${count})</li>`
-        ).join("");
+        const fallbackGenres = [
+          ["ambient", 1],
+          ["experimental", 1],
+          ["vaporwave", 1],
+          ["lo-fi", 1],
+          ["future garage", 1]
+        ];
+
+        const fullList = [...sortedGenres];
+        while (fullList.length < 15 && fallbackGenres.length > 0) {
+          fullList.push(fallbackGenres.shift());
+        }
+
+        container.innerHTML = '';
+        fullList.forEach(([genre, count], i) => {
+          const span = document.createElement('span');
+          span.textContent = genre;
+          span.className = `inline-block px-3 py-1 rounded-full text-sm font-semibold text-black bg-green-400 transition transform hover:scale-105`;
+          span.style.fontSize = `${1 + (15 - i) * 0.05}rem`;
+          container.appendChild(span);
+        });
       } catch (e) {
         console.error("Top genres error:", e);
       }
