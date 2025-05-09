@@ -119,7 +119,6 @@
   </div>
 
   <script>
-    // Parse access token from URL and store it
     const hash = window.location.hash || window.location.search;
     const params = new URLSearchParams(hash.replace(/^#/, "?"));
     const accessToken = params.get("access_token");
@@ -166,8 +165,13 @@
         const genreCount = {};
         data.items.forEach(artist => {
           artist.genres.forEach(genre => {
-            genreCount[genre] = (genreCount[genre] || 0) + 1;
-          });
+        if (!seedGenres.includes(genre) && seedGenres.length < 5) {
+          seedGenres.push(genre);
+        }
+      });
+      if (!seedArtists.includes(artist.id) && seedArtists.length < 2) {
+        seedArtists.push(artist.id);
+      }
         });
         const sortedGenres = Object.entries(genreCount)
           .sort((a, b) => b[1] - a[1])
@@ -184,11 +188,42 @@
 
     async function fetchRecommendations(token) {
   try {
-    const data = await fetchSpotify("search?q=genre:pop&type=playlist&limit=4", token);
+    const seedGenres = [];
+    const seedArtists = [];
+    const seedTracks = [];
+
+    const topGenresRes = await fetchSpotify("me/top/artists?time_range=long_term&limit=10", token);
+    topGenresRes.items.forEach(artist => {
+      artist.genres.forEach(genre => {
+        if (!seedGenres.includes(genre) && seedGenres.length < 5) {
+          seedGenres.push(genre);
+        }
+      });
+      if (!seedArtists.includes(artist.id) && seedArtists.length < 2) {
+        seedArtists.push(artist.id);
+      }
+    });
+
+    const topTracksRes = await fetchSpotify("me/top/tracks?time_range=long_term&limit=10", token);
+    topTracksRes.items.forEach(track => {
+      if (!seedTracks.includes(track.id) && seedTracks.length < 2) {
+        seedTracks.push(track.id);
+      }
+    });
+
+    const queryParts = [...seedGenres.map(g => `genre:\"${g}\"`),
+                        ...seedArtists.map(a => `artist:${a}`),
+                        ...seedTracks.map(t => `track:${t}`)];
+
+    const query = queryParts.join(" OR ") || "genre:pop";
+    const searchUrl = `search?q=${encodeURIComponent(query)}&type=playlist&limit=6`;
+    const data = await fetchSpotify(searchUrl, token);
+
     const container = document.getElementById("recommended-playlists");
     const playlists = await Promise.all(
       data.playlists.items.map(async (pl) => {
         let imageUrl = "https://via.placeholder.com/300x300?text=No+Image";
+        let matchedBy = "related to your taste";
         try {
           const imgRes = await fetch(`https://api.spotify.com/v1/playlists/${pl.id}/images`, {
             headers: { Authorization: `Bearer ${token}` }
@@ -201,10 +236,19 @@
           console.warn(`No image found for playlist ${pl.id}`, err);
         }
 
+        const lowerName = pl.name.toLowerCase();
+        const match = [...seedGenres, ...seedArtists, ...seedTracks].find(seed => lowerName.includes(seed.toLowerCase()));
+        if (match) {
+          if (seedGenres.includes(match)) matchedBy = `genre: ${match}`;
+          else if (seedArtists.includes(match)) matchedBy = `artist ID: ${match}`;
+          else if (seedTracks.includes(match)) matchedBy = `track ID: ${match}`;
+        }
+
         return `
           <li class="bg-[#111] p-4 rounded shadow">
             <img src="${imageUrl}" class="rounded mb-2">
             <p class="font-bold text-sm">${pl.name}</p>
+            <p class="text-xs text-gray-400">Matched by: ${matchedBy}</p>
             <a href="${pl.external_urls.spotify}" target="_blank" class="text-green-400 text-xs">Open on Spotify</a>
           </li>`;
       })

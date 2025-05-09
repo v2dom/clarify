@@ -1,4 +1,3 @@
-// clarify_backend_app.js
 const express = require('express');
 const axios = require('axios');
 const cors = require('cors');
@@ -12,7 +11,7 @@ app.use(cors({
 
 app.use(express.json());
 
-// 1. Spotify Login Route
+// spotify login route
 app.get('/login', (req, res) => {
   const queryParams = new URLSearchParams({
     response_type: 'code',
@@ -23,7 +22,7 @@ app.get('/login', (req, res) => {
   res.redirect(`https://accounts.spotify.com/authorize?${queryParams.toString()}`);
 });
 
-// 2. Spotify Callback Route
+// spotify callback route
 app.get('/callback', async (req, res) => {
   const { code } = req.query;
   const clientId = process.env.SPOTIFY_CLIENT_ID;
@@ -56,7 +55,7 @@ app.get('/callback', async (req, res) => {
   }
 });
 
-// 3. Refresh Access Token
+// refresh access token
 app.post('/refresh', async (req, res) => {
   const { refresh_token } = req.body;
   const clientId = process.env.SPOTIFY_CLIENT_ID;
@@ -82,7 +81,7 @@ app.post('/refresh', async (req, res) => {
   }
 });
 
-// Optional health check
+// health check
 app.get('/', (req, res) => {
   res.send('Clarify backend running');
 });
