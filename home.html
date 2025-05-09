@@ -78,13 +78,28 @@
     <div class="col-span-1 flex flex-col gap-6">
   <div class="card flex-[2] min-h-0">
     <h2 class="text-l mb-4 text-center">Now Playing</h2>
-    <div class="flex flex-col items-center text-center">
-      <img id="now-playing-img" src="" class="w-40 h-40 object-cover rounded-lg mb-2">
-      <div id="now-playing-info">
-        <div class="text-lg highlight" id="now-playing-title"></div>
-        <div class="text-md uppercase font-semibold" id="now-playing-artist"></div>
-        <div class="text-sm text-gray-400" id="now-playing-album"></div>
-      </div>
+    <div class="flex flex-row items-center gap-6 text-left">
+  <img id="now-playing-img" src="" class="w-40 h-40 object-cover rounded-lg">
+  <div class="flex flex-col justify-between h-full">
+    <div id="now-playing-info" class="mb-4">
+      <div class="text-lg highlight" id="now-playing-title"></div>
+      <div class="text-md uppercase font-semibold" id="now-playing-artist"></div>
+      <div class="text-sm text-gray-400" id="now-playing-album"></div>
+    </div>
+    <div class="flex items-center gap-4 mt-2">
+      <button id="pause-btn" style="display: none;" class="bg-gray-800 hover:bg-gray-700 rounded-full p-3">
+        <img src="https://www.svgrepo.com/show/176023/music-pause-button-pair-of-lines.svg" alt="Pause" class="w-6 h-6">
+      </button>
+      <button id="play-btn" class="bg-gray-800 hover:bg-gray-700 rounded-full p-3">
+        <img src="https://www.svgrepo.com/show/164900/play-button-arrowhead.svg" alt="Play" class="w-6 h-6">
+      </button>
+      <button id="skip-btn" class="bg-gray-800 hover:bg-gray-700 rounded-full p-3">
+        <img src="https://www.svgrepo.com/show/23146/fast-forward-arrowhead-symbol.svg" alt="Skip" class="w-6 h-6">
+      </button>
+    </div>
+  </div>
+</div>
+</div>
       <div class="flex items-center gap-4 mt-4">
         <button id="pause-btn" style="display: none;" class="bg-gray-800 hover:bg-gray-700 rounded-full p-3">
           <img src="https://www.svgrepo.com/show/176023/music-pause-button-pair-of-lines.svg" alt="Pause" class="w-6 h-6">
