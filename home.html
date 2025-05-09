@@ -156,7 +156,7 @@
       });
       if (res.status === 401) {
         localStorage.removeItem("spotify_access_token");
-        //window.location.href = "/clarify";
+        window.location.href = "/clarify";
         return;
       }
       if (!res.ok) throw new Error(`Spotify API error: ${res.status}`);
@@ -322,7 +322,7 @@
     }
 
     async function initializeApp() {
-      //if (!token) return window.location.href = "/clarify";
+      if (!token) return window.location.href = "/clarify";
       try {
         const profile = await fetchSpotify("me", token);
         document.getElementById("greeting").textContent = `Hi, ${profile.display_name}`;
