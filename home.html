@@ -163,6 +163,7 @@
       try {
         const topGenresRes = await fetchSpotify("me/top/artists?time_range=long_term&limit=10", token);
         const seedGenres = [];
+        const seedArtists = [];
         const genreCount = {};
         const data = topGenresRes;
         data.items.forEach(artist => {
