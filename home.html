@@ -54,9 +54,8 @@
     <a href="/clarify" class="text-green-400 underline text-sm">Back to Login</a>
   </div>
 
-  <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 px-6" id="dashboard">
-    <div class="card">
-      <h2>Top Artists
+  <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 px-6" id="dashboard">
+    <div class="card col-span-1 row-start-1 h-full"><h2 class="mb-4">Top Artists
         <select id="artist-range" onchange="initializeApp()" class="bg-black text-white ml-2">
           <option value="short_term">This Month</option>
           <option value="medium_term">Last 6 Months</option>
@@ -66,8 +65,7 @@
       <ul id="top-artists"></ul>
     </div>
 
-    <div class="card">
-      <h2>Top Tracks
+    <div class="card col-span-1 row-start-1 h-full"><h2 class="mb-4">Top Tracks
         <select id="track-range" onchange="initializeApp()" class="bg-black text-white ml-2">
           <option value="short_term">This Month</option>
           <option value="medium_term">Last 6 Months</option>
@@ -77,11 +75,11 @@
       <ul id="top-tracks"></ul>
     </div>
 
-    <div class="card row-span-2 flex flex-col items-center text-center">
+    <div class="card col-span-1 row-start-1 h-full flex flex-col items-center text-center">
       <h2 class="text-xl font-bold mb-4">Now Playing</h2>
       <img id="now-playing-img" src="" class="w-64 h-64 object-cover rounded-lg mb-4">
       <div id="now-playing-info">
-        <div class="text-lg font-bold highlight" id="now-playing-title"></div>
+        <div class="text-lg highlight" id="now-playing-title"></div>
         <div class="text-md uppercase font-semibold" id="now-playing-artist"></div>
         <div class="text-sm text-gray-400" id="now-playing-album"></div>
       </div>
@@ -98,27 +96,44 @@
       </div>
     </div>
 
-    <div class="card">
-      <h2>Top Genres</h2>
+    <div class="card col-span-1 row-start-2 col-start-3 h-full"><h2>Top Genres</h2>
       <div id="top-genres" class="flex flex-wrap gap-2 mt-4"></div>
     </div>
-
-    <div class="card">
-      <h2>Peak Listening Hours</h2>
-      <p id="peak-hours">Loading...</p>
-    </div>
-
-    <div class="card">
-      <h2>Overall Popularity</h2>
-      <div class="mb-2 text-lg font-bold" id="popularity-score">Calculating...</div>
-      <div class="w-full bg-gray-700 rounded-full h-4">
-        <div id="popularity-bar" class="popularity-meter h-4 rounded-full w-1/2"></div>
+        <div class="text-md uppercase font-semibold" id="now-playing-artist"></div>
+        <div class="text-sm text-gray-400" id="now-playing-album"></div>
       </div>
-      <p id="popularity-comment" class="mt-2 text-sm text-gray-300">Analyzing your taste...</p>
+      <div class="flex items-center gap-6 mt-4">
+        <button id="skip-btn">
+          <img src="https://www.svgrepo.com/show/23146/fast-forward-arrowhead-symbol.svg" alt="Skip" class="w-6 h-6">
+        </button>
+        <button id="pause-btn" style="display: none;">
+          <img src="https://www.svgrepo.com/show/176023/music-pause-button-pair-of-lines.svg" alt="Pause" class="w-6 h-6">
+        </button>
+        <button id="play-btn">
+          <img src="https://www.svgrepo.com/show/164900/play-button-arrowhead.svg" alt="Play" class="w-6 h-6">
+        </button>
+      </div>
     </div>
 
-    <div class="card col-span-3">
-      <h2>Explore User-Created Playlists</h2>
+    </h2>
+      
+
+    <div class="col-span-3 grid grid-cols-3 gap-6">
+  <div class="card col-span-1 h-full">
+    <h2>Peak Listening Hours</h2>
+    <p id="peak-hours"></p>
+  </div>
+  <div class="card col-span-2 h-full">
+    <h2>Overall Popularity</h2>
+    <div class="mb-2 text-lg font-bold" id="popularity-score"></div>
+    <div class="w-full bg-gray-700 rounded-full h-4">
+      <div id="popularity-bar" class="popularity-meter h-4 rounded-full w-1/2"></div>
+    </div>
+    <p id="popularity-comment" class="mt-2 text-sm text-gray-300"></p>
+  </div>
+</div>
+
+    <div class="card col-span-full"><h2>Explore User-Created Playlists</h2>
       <ul id="recommended-playlists" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mt-4"></ul>
     </div>
   </div>
@@ -141,7 +156,7 @@
       });
       if (res.status === 401) {
         localStorage.removeItem("spotify_access_token");
-        window.location.href = "/clarify";
+        //window.location.href = "/clarify";
         return;
       }
       if (!res.ok) throw new Error(`Spotify API error: ${res.status}`);
@@ -307,7 +322,7 @@
     }
 
     async function initializeApp() {
-      if (!token) return window.location.href = "/clarify";
+      //if (!token) return window.location.href = "/clarify";
       try {
         const profile = await fetchSpotify("me", token);
         document.getElementById("greeting").textContent = `Hi, ${profile.display_name}`;
