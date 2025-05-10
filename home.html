@@ -1,54 +1,12 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Clarify - Spotify Insights</title>
   <script src="https://cdn.tailwindcss.com"></script>
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-<script>
-function renderActivityChart(token) {
-  const canvas = document.getElementById("activityChart");
-  if (!canvas) return;
-  const ctx = canvas.getContext("2d");
-  fetchSpotify("me/player/recently-played?limit=50", token).then(data => {
-    const timestamps = data.items.map(i => new Date(i.played_at));
-    const oldest = timestamps[timestamps.length - 1];
-    const newest = timestamps[0];
-    const hoursSpan = (newest - oldest) / 1000 / 60 / 60;
-    const score = Math.max(1, Math.floor(50 / Math.max(1, hoursSpan)));
-
-    new Chart(ctx, {
-      type: "line",
-      data: {
-        labels: Array.from({ length: 100 }, (_, i) => i),
-        datasets: [{
-          label: "Listening Curve",
-          data: Array.from({ length: 100 }, (_, i) => {
-            const x = (i - 50) / 10;
-            return Math.exp(-0.5 * x * x);
-          }),
-          borderColor: "#22c55e",
-          borderWidth: 2,
-          pointRadius: 0,
-          fill: true,
-          backgroundColor: "rgba(34, 197, 94, 0.2)",
-          tension: 0.3
-        }]
-      },
-      options: {
-        responsive: true,
-        plugins: { legend: { display: false } },
-        scales: { y: { display: false }, x: { display: false } }
-      }
-    });
-
-    const tier = score > 10 ? "top 1%" : score > 5 ? "top 5%" : score > 2 ? "top 25%" : "bottom 60%";
-    document.getElementById("activityLabel").innerHTML = `<span class='text-green-400 font-semibold'>${tier.toUpperCase()}</span> of all Spotify listeners — based on how fast you played your last 50 songs.`;
-  });
-}
-</script>
-  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700&display=swap" rel="stylesheet"/>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700&display=swap" rel="stylesheet" />
   <style>
     body {
       font-family: 'Montserrat', sans-serif;
@@ -72,21 +30,22 @@ function renderActivityChart(token) {
       border-radius: 9999px;
       background: linear-gradient(to right, #22c55e, #facc15, #ef4444);
     }
-    #peak-hours {
-      font-size: 1.5rem;
-      margin-top: 10px;
-    }
     .card ul li {
       display: flex;
       align-items: center;
       margin-bottom: 10px;
     }
-    .card ul#top-artists li img, .card ul#top-tracks li img {
-  width: 50px;
-  height: 50px;
-  border-radius: 50%;
-  margin-right: 10px;
-}
+    .card ul#top-artists li img,
+    .card ul#top-tracks li img {
+      width: 50px;
+      height: 50px;
+      border-radius: 50%;
+      margin-right: 10px;
+    }
+    #peak-hours {
+      font-size: 1.5rem;
+      margin-top: 10px;
+    }
   </style>
 </head>
 <body class="bg-black text-white">
@@ -95,162 +54,289 @@ function renderActivityChart(token) {
     <p class="text-xl mt-2" id="status">Loading Spotify data...</p>
     <a href="/clarify" class="text-green-400 underline text-sm">Back to Login</a>
   </div>
-
-  <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 px-6" id="dashboard">
-    <div class="card col-span-1"><h2 class="mb-4">Top Artists
-        <select id="artist-range" onchange="initializeApp()" class="bg-black text-white ml-2">
-          <option value="short_term">This Month</option>
-          <option value="medium_term">Last 6 Months</option>
-          <option value="long_term">All Time</option>
-        </select>
-      </h2>
-      <ul id="top-artists"></ul>
-    </div>
-
-    <div class="card col-span-1"><h2 class="mb-4">Top Tracks
-        <select id="track-range" onchange="initializeApp()" class="bg-black text-white ml-2">
-          <option value="short_term">This Month</option>
-          <option value="medium_term">Last 6 Months</option>
-          <option value="long_term">All Time</option>
-        </select>
-      </h2>
-      <ul id="top-tracks"></ul>
-    </div>
-
-    <div class="col-span-1 flex flex-col gap-6">
-      <div class="card flex-none">
-        <h2 class="text-l mb-4 text-center">Now Playing</h2>
-        <div class="flex flex-row items-center gap-6 text-left">
-          <img id="now-playing-img" src="" class="w-40 h-40 object-cover rounded-lg">
-          <div class="flex flex-col justify-between h-full">
-            <div id="now-playing-info" class="mb-4">
-              <div class="text-lg highlight" id="now-playing-title"></div>
-              <div class="text-md uppercase font-semibold" id="now-playing-artist"></div>
-              <div class="text-sm text-gray-400" id="now-playing-album"></div>
-            </div>
-            <div class="flex items-center gap-4 mt-2">
-              <button id="pause-btn">
-  <img src="https://www.svgrepo.com/show/176023/music-pause-button-pair-of-lines.svg" alt="Pause" class="w-6 h-6 invert">
-</button>
-              <button id="play-btn">
-  <img src="https://www.svgrepo.com/show/164900/play-button-arrowhead.svg" alt="Play" class="w-6 h-6 invert">
-</button>
-              <button id="skip-btn">
-  <img src="https://www.svgrepo.com/show/23146/fast-forward-arrowhead-symbol.svg" alt="Skip" class="w-6 h-6 invert">
-</button>
-            </div>
+  
+  <div id="dashboard" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 px-6">
+  <div class="card col-span-1">
+    <h2 class="mb-4">Top Artists
+      <select id="artist-range" onchange="initializeApp()" class="bg-black text-white ml-2">
+        <option value="short_term">This Month</option>
+        <option value="medium_term">Last 6 Months</option>
+        <option value="long_term">All Time</option>
+      </select>
+    </h2>
+    <ul id="top-artists"></ul>
+  </div>
+  <div class="card col-span-1">
+    <h2 class="mb-4">Top Tracks
+      <select id="track-range" onchange="initializeApp()" class="bg-black text-white ml-2">
+        <option value="short_term">This Month</option>
+        <option value="medium_term">Last 6 Months</option>
+        <option value="long_term">All Time</option>
+      </select>
+    </h2>
+    <ul id="top-tracks"></ul>
+  </div>
+  <div class="col-span-1 flex flex-col gap-6">
+    <div class="card flex-none">
+      <h2 class="text-l mb-4 text-center">Now Playing</h2>
+      <div class="flex flex-row items-center gap-6 text-left">
+        <img id="now-playing-img" src="" class="w-40 h-40 object-cover rounded-lg">
+        <div class="flex flex-col justify-between h-full">
+          <div id="now-playing-info" class="mb-4">
+            <div class="text-lg highlight" id="now-playing-title"></div>
+            <div class="text-md uppercase font-semibold" id="now-playing-artist"></div>
+            <div class="text-sm text-gray-400" id="now-playing-album"></div>
+          </div>
+          <div class="flex items-center gap-4 mt-2">
+            <button id="pause-btn">
+              <img src="https://www.svgrepo.com/show/176023/music-pause-button-pair-of-lines.svg" alt="Pause" class="w-6 h-6 invert">
+            </button>
+            <button id="play-btn">
+              <img src="https://www.svgrepo.com/show/164900/play-button-arrowhead.svg" alt="Play" class="w-6 h-6 invert">
+            </button>
+            <button id="skip-btn">
+              <img src="https://www.svgrepo.com/show/23146/fast-forward-arrowhead-symbol.svg" alt="Skip" class="w-6 h-6 invert">
+            </button>
+          </div>
         </div>
-</div>
-</div>
-
-<!-- Moved Listening Rank to its own section -->
-<div class="card flex-none mt-4">
-  <h3 class="text-md font-bold text-white tracking-wide uppercase mb-3 border-b border-gray-700 pb-1">Listening Activity Rank</h3>
-  <div class="bg-[#111] rounded-xl p-4 shadow-inner">
-    <canvas id="activityChart" class="w-full h-40"></canvas>
-  </div>
-  <p id="activityLabel" class="text-sm text-gray-400 mt-2 text-center"></p>
-</div>
-      </div>
-
-      <div class="card flex-1 flex flex-col justify-between">
-        <h2 class="mb-4">Top Genres</h2>
-        <div id="top-genres" class="flex flex-wrap gap-2 mt-4"></div>
       </div>
     </div>
-  </div>
-
-  <div class="col-span-3 grid grid-cols-3 gap-6 px-6 mt-6">
-    <div class="card col-span-1 h-full">
-      <h2>Peak Listening Hours</h2>
-      <p id="peak-hours"></p>
-    </div>
-    <div class="card col-span-2 h-full">
-      <h2>Overall Popularity</h2>
-      <div class="mb-2 text-lg font-bold" id="popularity-score"></div>
-      <div class="w-full bg-gray-700 rounded-full h-4">
-        <div id="popularity-bar" class="popularity-meter h-4 rounded-full w-1/2"></div>
+    <div class="card flex-none mt-4">
+      <h3 class="text-md font-bold text-white tracking-wide uppercase mb-3 border-b border-gray-700 pb-1">Listening Activity Rank</h3>
+      <div class="bg-[#111] rounded-xl p-4 shadow-inner">
+        <canvas id="activityChart" class="w-full h-40"></canvas>
       </div>
-      <p id="popularity-comment" class="mt-2 text-sm text-gray-300"></p>
+      <p id="activityLabel" class="text-sm text-gray-400 mt-2 text-center"></p>
+    </div>
+    <div class="card flex-1 flex flex-col justify-between">
+      <h2 class="mb-4">Top Genres</h2>
+      <div id="top-genres" class="flex flex-wrap gap-2 mt-4"></div>
     </div>
   </div>
-
-  <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 px-6 mt-6">
-    <div class="card col-span-full">
-      <h2 class="text-xl font-bold mb-2">Explore User-Created Playlists</h2>
+</div>
+<div class="col-span-3 grid grid-cols-3 gap-6 px-6 mt-6">
+  <div class="card col-span-1 h-full">
+    <h2>Peak Listening Hours</h2>
+    <p id="peak-hours"></p>
+  </div>
+  <div class="card col-span-2 h-full">
+    <h2>Overall Popularity</h2>
+    <div class="mb-2 text-lg font-bold" id="popularity-score"></div>
+    <div class="w-full bg-gray-700 rounded-full h-4">
+      <div id="popularity-bar" class="popularity-meter h-4 rounded-full w-1/2"></div>
+    </div>
+    <p id="popularity-comment" class="mt-2 text-sm text-gray-300"></p>
+  </div>
+</div>
+<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 px-6 mt-6">
+  <div class="card col-span-1">
+    <h2 class="text-xl font-bold mb-2">Average Stats</h2>
+    <div id="audio-features"></div>
+  </div>
+  <div class="card col-span-full">
+    <h2 class="text-xl font-bold mb-2">Explore User-Created Playlists</h2>
     <button onclick="fetchRecommendations(token)" class="mt-4 bg-white text-black text-sm font-semibold px-4 py-2 rounded hover:bg-gray-200 transition">Shuffle</button>
     <ul id="recommended-playlists" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mt-4"></ul>
-    </div>
   </div>
+</div>
 
   <script>
     const hash = window.location.hash || window.location.search;
-    const params = new URLSearchParams(hash.replace(/^#/, "?"));
-    const accessToken = params.get("access_token");
-    if (accessToken) {
-      localStorage.setItem("spotify_access_token", accessToken);
-      history.replaceState(null, "", window.location.pathname);
-    }
+const params = new URLSearchParams(hash.replace(/^#/, "?"));
+const accessToken = params.get("access_token");
+if (accessToken) {
+  localStorage.setItem("spotify_access_token", accessToken);
+  history.replaceState(null, "", window.location.pathname);
+}
+document.getElementById("status").textContent = "Clarify - by v2dom";
+
+const token = localStorage.getItem("spotify_access_token");
+
+async function fetchSpotify(endpoint, token) {
+  const res = await fetch(`https://api.spotify.com/v1/${endpoint}`, {
+    headers: { Authorization: `Bearer ${token}` }
+  });
+  if (res.status === 401) {
+    localStorage.removeItem("spotify_access_token");
+    window.location.href = "/clarify";
+    return;
+  }
+  if (!res.ok) throw new Error(`Spotify API error: ${res.status}`);
+  return await res.json();
+}
+
+async function renderNowPlaying(token) {
+  try {
+    const data = await fetchSpotify("me/player/currently-playing", token);
+    if (!data || !data.item) return;
+    const img = document.getElementById("now-playing-img");
+    const title = document.getElementById("now-playing-title");
+    const artist = document.getElementById("now-playing-artist");
+    const album = document.getElementById("now-playing-album");
+    const isPlaying = data.is_playing;
+
+    img.src = data.item.album.images[0]?.url || "";
+    title.textContent = data.item.name;
+    artist.textContent = data.item.artists.map(a => a.name).join(", ");
+    album.textContent = data.item.album.name;
+
+    document.getElementById("play-btn").style.display = isPlaying ? "none" : "inline";
+    document.getElementById("pause-btn").style.display = isPlaying ? "inline" : "none";
+  } catch (e) {
+    console.error("Now playing error:", e);
+  }
+}
+
+async function play() {
+  await fetch("https://api.spotify.com/v1/me/player/play", {
+    method: "PUT",
+    headers: { Authorization: `Bearer ${token}` }
+  });
+  renderNowPlaying(token);
+    renderAudioFeatures(token);
+}
+
+async function pause() {
+  await fetch("https://api.spotify.com/v1/me/player/pause", {
+    method: "PUT",
+    headers: { Authorization: `Bearer ${token}` }
+  });
+  renderNowPlaying(token);
+}
+
+async function skip() {
+  await fetch("https://api.spotify.com/v1/me/player/next", {
+    method: "POST",
+    headers: { Authorization: `Bearer ${token}` }
+  });
+  renderNowPlaying(token);
+}
+
+async function renderAudioFeatures(token) {
+  const data = await fetchSpotify("me/top/tracks?time_range=medium_term&limit=50", token);
+  const features = {
+    danceability: 0,
+    energy: 0,
+    acousticness: 0,
+    speechiness: 0,
+    valence: 0,
+    tempo: 0
+  };
+  const promises = data.items.map(t => fetchSpotify(`audio-features/${t.id}`, token));
+  const results = await Promise.all(promises);
+  results.forEach(f => {
+    features.danceability += f.danceability;
+    features.energy += f.energy;
+    features.acousticness += f.acousticness;
+    features.speechiness += f.speechiness;
+    features.valence += f.valence;
+    features.tempo += f.tempo;
+  });
+  const count = results.length;
+  Object.keys(features).forEach(k => features[k] /= count);
+  const container = document.getElementById("audio-features");
+  container.innerHTML = `
+    <div class='grid grid-cols-2 gap-4 mt-4'>
+      ${Object.entries(features).map(([key, value]) => {
+        return key === "tempo" ? `<div><h3 class='font-bold text-sm mb-1'>Tempo</h3><p class='text-sm'>${value.toFixed(1)} BPM</p></div>`
+          : `<div><h3 class='font-bold text-sm mb-1'>${key.charAt(0).toUpperCase() + key.slice(1)}</h3><div class='w-full bg-gray-700 h-2 rounded'><div style='width:${value * 100}%' class='h-2 bg-green-400 rounded'></div></div></div>`;
+      }).join("")}
+    </div>`;
+}
+
+async function initializeApp() {
+  if (!token) return window.location.href = "/clarify";
+  try {
+    const profile = await fetchSpotify("me", token);
+    document.getElementById("greeting").textContent = `Hi, ${profile.display_name}`;
     document.getElementById("status").textContent = "Clarify - by v2dom";
+    document.getElementById("dashboard").style.display = "grid";
 
-    const token = localStorage.getItem("spotify_access_token");
-
-    async function fetchSpotify(endpoint, token) {
-      const res = await fetch(`https://api.spotify.com/v1/${endpoint}`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      if (res.status === 401) {
-        localStorage.removeItem("spotify_access_token");
-        window.location.href = "/clarify";
-        return;
-      }
-      if (!res.ok) throw new Error(`Spotify API error: ${res.status}`);
-      return await res.json();
+    renderNowPlaying(token);
+    updateTopArtists(token);
+    updateTopTracks(token);
+    updateTopGenres(token);
+    initializeInsights(token);
+    renderActivityChart(token);
+    fetchRecommendations(token);
+  } catch (e) {
+    console.error("Init error:", e);
+  }
+}
+async function renderActivityChart(token) {
+  const canvas = document.getElementById("activityChart");
+  if (!canvas) return;
+  const ctx = canvas.getContext("2d");
+  const data = await fetchSpotify("me/player/recently-played?limit=50", token);
+  const timestamps = data.items.map(i => new Date(i.played_at));
+  const oldest = timestamps[timestamps.length - 1];
+  const newest = timestamps[0];
+  const hoursSpan = (newest - oldest) / 1000 / 60 / 60;
+  const score = Math.max(1, Math.floor(50 / Math.max(1, hoursSpan)));
+  new Chart(ctx, {
+    type: "line",
+    data: {
+      labels: Array.from({ length: 100 }, (_, i) => i),
+      datasets: [
+        {
+          label: "Listening Curve",
+          data: Array.from({ length: 100 }, (_, i) => {
+            const x = (i - 50) / 10;
+            return Math.exp(-0.5 * x * x);
+          }),
+          borderColor: "#22c55e",
+          borderWidth: 2,
+          pointRadius: 0,
+          fill: true,
+          backgroundColor: "rgba(34, 197, 94, 0.2)",
+          tension: 0.3
+        },
+        {
+          label: "You",
+          data: Array.from({ length: 100 }, (_, i) => {
+            const x = (i - 50) / 10;
+            const y = Math.exp(-0.5 * x * x);
+            return i === Math.min(99, Math.floor(score * 10)) ? y : null;
+          }),
+          borderColor: "white",
+          backgroundColor: "white",
+          pointRadius: 6,
+          pointHoverRadius: 6,
+          type: "line",
+          showLine: false
+        }
+      ]
+    },
+    options: {
+      plugins: { legend: { display: false } },
+      scales: { x: { display: false }, y: { display: false } }
     }
+  });
+  const tier = score > 10 ? "top 1%" : score > 5 ? "top 5%" : score > 2 ? "top 25%" : "bottom 60%";
+  document.getElementById("activityLabel").innerHTML = `<span class='text-green-400 font-semibold'>${tier.toUpperCase()}</span> — based on how quickly you played your last 50 songs.`;
+}
 
-    async function renderNowPlaying(token) {
-      try {
-        const data = await fetchSpotify("me/player/currently-playing", token);
-        if (!data || !data.item) return;
-        const img = document.getElementById("now-playing-img");
-        const title = document.getElementById("now-playing-title");
-        const artist = document.getElementById("now-playing-artist");
-        const album = document.getElementById("now-playing-album");
-        const isPlaying = data.is_playing;
+async function updateTopArtists(token) {
+  const range = document.getElementById("artist-range")?.value || "short_term";
+  const data = await fetchSpotify(`me/top/artists?time_range=${range}&limit=10`, token);
+  const container = document.getElementById("top-artists");
+  container.innerHTML = data.items.map((item, i) => {
+    let style = i === 0 ? 'color: gold' : i === 1 ? 'color: silver' : i === 2 ? 'color: #cd7f32' : '';
+    return `<li><img src="${item.images[0].url}" alt="cover"><div><strong style="${style}">${i + 1}. ${item.name}</strong></div></li>`;
+  }).join("");
+}
 
-        img.src = data.item.album.images[0]?.url || "";
-        title.textContent = data.item.name;
-        artist.textContent = data.item.artists.map(a => a.name).join(", ");
-        album.textContent = data.item.album.name;
+async function updateTopTracks(token) {
+  const range = document.getElementById("track-range")?.value || "short_term";
+  const data = await fetchSpotify(`me/top/tracks?time_range=${range}&limit=10`, token);
+  const container = document.getElementById("top-tracks");
+  container.innerHTML = data.items.map((item, i) => {
+    let style = i === 0 ? 'color: gold' : i === 1 ? 'color: silver' : i === 2 ? 'color: #cd7f32' : '';
+    return `<li><img src="${item.album.images[0].url}" alt="cover"><div><strong style="${style}">${i + 1}. ${item.name}</strong><br><small>${item.artists.map(a => a.name).join(', ')}</small></div></li>`;
+  }).join("");
+}
 
-        document.getElementById("play-btn").style.display = isPlaying ? "none" : "inline";
-        document.getElementById("pause-btn").style.display = isPlaying ? "inline" : "none";
-      } catch (e) {
-        console.error("Now playing error:", e);
-      }
-    }
-
-    async function updateTopArtists(token) {
-      const range = document.getElementById("artist-range")?.value || "short_term";
-      const data = await fetchSpotify(`me/top/artists?time_range=${range}&limit=10`, token);
-      const container = document.getElementById("top-artists");
-      container.innerHTML = data.items.map((item, i) => {
-        let style = i === 0 ? 'color: gold' : i === 1 ? 'color: silver' : i === 2 ? 'color: #cd7f32' : '';
-        return `<li><img src="${item.images[0].url}" alt="cover"><div><strong style="${style}">${i + 1}. ${item.name}</strong></div></li>`;
-      }).join("");
-    }
-
-    async function updateTopTracks(token) {
-      const range = document.getElementById("track-range")?.value || "short_term";
-      const data = await fetchSpotify(`me/top/tracks?time_range=${range}&limit=10`, token);
-      const container = document.getElementById("top-tracks");
-      container.innerHTML = data.items.map((item, i) => {
-        let style = i === 0 ? 'color: gold' : i === 1 ? 'color: silver' : i === 2 ? 'color: #cd7f32' : '';
-        return `<li><img src="${item.album.images[0].url}" alt="cover"><div><strong style="${style}">${i + 1}. ${item.name}</strong><br><small>${item.artists.map(a => a.name).join(', ')}</small></div></li>`;
-      }).join("");
-    }
-
-    async function updateTopGenres(token) {
+async function updateTopGenres(token) {
   try {
     const [topArtists, topTracks, recent] = await Promise.all([
       fetchSpotify("me/top/artists?time_range=long_term&limit=20", token),
@@ -258,20 +344,17 @@ function renderActivityChart(token) {
       fetchSpotify("me/player/recently-played?limit=50", token)
     ]);
 
-    
-
     const genreCount = {};
-
     const collectGenres = (artistArray) => {
-  if (!Array.isArray(artistArray)) return;
-  artistArray.forEach(artist => {
-    if (!artist?.genres || !Array.isArray(artist.genres)) return;
-    artist.genres.forEach(raw => {
-      const genre = raw;
-      genreCount[genre] = (genreCount[genre] || 0) + 1;
-    });
-  });
-};
+      if (!Array.isArray(artistArray)) return;
+      artistArray.forEach(artist => {
+        if (!artist?.genres || !Array.isArray(artist.genres)) return;
+        artist.genres.forEach(raw => {
+          const genre = raw;
+          genreCount[genre] = (genreCount[genre] || 0) + 1;
+        });
+      });
+    };
 
     collectGenres(topArtists.items);
     collectGenres(topTracks.items.flatMap(t => t.artists));
@@ -290,152 +373,105 @@ function renderActivityChart(token) {
   } catch (e) {
     console.error("Top genres error:", e);
   }
-};
+}
 
-
-    async function initializeApp() {
-      if (!token) return window.location.href = "/clarify";
-      try {
-        const profile = await fetchSpotify("me", token);
-        document.getElementById("greeting").textContent = `Hi, ${profile.display_name}`;
-        document.getElementById("status").textContent = "Clarify - by v2dom";
-        document.getElementById("dashboard").style.display = "grid";
-
-        renderNowPlaying(token);
-        updateTopArtists(token);
-        updateTopTracks(token);
-        updateTopGenres(token);
-        initializeInsights(token);
-        renderActivityChart(token);
-        fetchRecommendations(token);
-      } catch (e) {
-        console.error("Init error:", e);
-      }
-    }
-
-    window.addEventListener("DOMContentLoaded", () => {
-      initializeApp();
-      setInterval(() => renderNowPlaying(token), 5000);
-      const playBtn = document.getElementById("play-btn");
-      const pauseBtn = document.getElementById("pause-btn");
-      const skipBtn = document.getElementById("skip-btn");
-
-      if (playBtn) playBtn.addEventListener("click", play);
-      if (pauseBtn) pauseBtn.addEventListener("click", pause);
-      if (skipBtn) skipBtn.addEventListener("click", skip);
+async function initializeInsights(token) {
+  try {
+    const recent = await fetchSpotify("me/player/recently-played?limit=50", token);
+    const hours = Array(24).fill(0);
+    recent.items.forEach(item => {
+      const hour = new Date(item.played_at).getHours();
+      hours[hour]++;
     });
-</script>
-<script>
-    async function initializeInsights(token) {
+    const max = Math.max(...hours);
+    const peak = hours.findIndex(h => h === max);
+    document.getElementById("peak-hours").textContent = `${peak}:00 - ${peak + 1}:00 (${max} tracks)`;
+
+    const allTime = await fetchSpotify("me/top/tracks?time_range=long_term&limit=20", token);
+    const avgPop = allTime.items.reduce((sum, t) => sum + t.popularity, 0) / allTime.items.length;
+    document.getElementById("popularity-score").textContent = `${Math.round(avgPop)}/100`;
+    document.getElementById("popularity-bar").style.width = `${avgPop}%`;
+    document.getElementById("popularity-comment").textContent =
+      avgPop > 80 ? "Mainstream lover!" :
+      avgPop < 40 ? "Obscure taste detected 👀" :
+      "Nice balance! You've got a solid mix of popular and lesser-known tracks.";
+  } catch (e) {
+    console.error("Insights error:", e);
+  }
+}
+
+async function fetchRecommendations(token) {
+  try {
+    const topArtists = await fetchSpotify("me/top/artists?time_range=long_term&limit=10", token);
+    const topTracks = await fetchSpotify("me/top/tracks?time_range=long_term&limit=10", token);
+
+    const seedGenres = [];
+    const seedArtists = [];
+    const seedTracks = [];
+
+    topArtists.items.forEach(artist => {
+      artist.genres.forEach(genre => {
+        if (!seedGenres.includes(genre) && seedGenres.length < 5) seedGenres.push(genre);
+      });
+      if (!seedArtists.includes(artist.id) && seedArtists.length < 2) seedArtists.push(artist.id);
+    });
+
+    topTracks.items.forEach(track => {
+      if (!seedTracks.includes(track.id) && seedTracks.length < 2) seedTracks.push(track.id);
+    });
+
+    const allSeeds = [...seedGenres, ...topArtists.items.map(a => a.name)].sort(() => 0.5 - Math.random()).slice(0, 5);
+    const query = allSeeds.join(" ") || "pop";
+    const data = await fetchSpotify(`search?q=${encodeURIComponent(query)}&type=playlist&limit=20&market=US`, token);
+
+    const container = document.getElementById("recommended-playlists");
+    container.classList.remove("opacity-100");
+    container.classList.add("opacity-0");
+    const sorted = (data.playlists?.items || []).filter(p => p && p.name && p.external_urls?.spotify);
+    const shuffled = sorted.sort(() => 0.5 - Math.random()).slice(0, 9);
+
+    const playlists = await Promise.all(shuffled.map(async (pl) => {
+      let imageUrl = "https://via.placeholder.com/300x300?text=No+Image";
       try {
-        const recent = await fetchSpotify("me/player/recently-played?limit=50", token);
-        const hours = Array(24).fill(0);
-        recent.items.forEach(item => {
-          const hour = new Date(item.played_at).getHours();
-          hours[hour]++;
+        const imgRes = await fetch(`https://api.spotify.com/v1/playlists/${pl.id}/images`, {
+          headers: { Authorization: `Bearer ${token}` }
         });
-        const max = Math.max(...hours);
-        const peak = hours.findIndex(h => h === max);
-        document.getElementById("peak-hours").textContent = `${peak}:00 - ${peak + 1}:00 (${max} tracks)`;
-
-        const allTime = await fetchSpotify("me/top/tracks?time_range=long_term&limit=20", token);
-        const avgPop = allTime.items.reduce((sum, t) => sum + t.popularity, 0) / allTime.items.length;
-        document.getElementById("popularity-score").textContent = `${Math.round(avgPop)}/100`;
-        document.getElementById("popularity-bar").style.width = `${avgPop}%`;
-        document.getElementById("popularity-comment").textContent =
-          avgPop > 80 ? "Mainstream lover!" :
-          avgPop < 40 ? "Obscure taste detected 👀" :
-          "Nice balance! You've got a solid mix of popular and lesser-known tracks.";
-      } catch (e) {
-        console.error("Insights error:", e);
+        const imgData = await imgRes.json();
+        if (Array.isArray(imgData) && imgData.length > 0) {
+          imageUrl = imgData[0].url;
+        }
+      } catch (err) {
+        console.warn(`No image found for playlist ${pl.id}`, err);
       }
-    }
 
-    async function fetchRecommendations(token) {
-      try {
-        const topArtists = await fetchSpotify("me/top/artists?time_range=long_term&limit=10", token);
-        const topTracks = await fetchSpotify("me/top/tracks?time_range=long_term&limit=10", token);
+      return `
+        <li class="flex flex-col items-center justify-between bg-transparent p-4 rounded text-center">
+          <img src="${imageUrl}" class="mb-2 w-40 h-40 object-cover">
+          <p class="text-base font-semibold mt-2 truncate max-w-full">${pl.name}</p>
+          <p class="text-sm text-gray-400 truncate max-w-full">${pl.owner?.display_name || 'Unknown'}</p>
+          <a href="${pl.external_urls.spotify}" target="_blank" class="mt-2 bg-green-500 hover:bg-green-600 text-black font-bold py-1 px-4 rounded-full text-sm">Open</a>
+        </li>`
+    }));
 
-        const seedGenres = [];
-        const seedArtists = [];
-        const seedTracks = [];
+    container.innerHTML = playlists.join("");
+    container.classList.remove("opacity-0");
+    container.classList.add("transition-opacity", "duration-500", "opacity-100");
+  } catch (e) {
+    console.error("Recommendation error:", e);
+  }
+}
 
-        topArtists.items.forEach(artist => {
-          artist.genres.forEach(genre => {
-            if (!seedGenres.includes(genre) && seedGenres.length < 5) seedGenres.push(genre);
-          });
-          if (!seedArtists.includes(artist.id) && seedArtists.length < 2) seedArtists.push(artist.id);
-        });
+window.addEventListener("DOMContentLoaded", () => {
+  initializeApp();
+  setInterval(() => renderNowPlaying(token), 5000);
+  const playBtn = document.getElementById("play-btn");
+  const pauseBtn = document.getElementById("pause-btn");
+  const skipBtn = document.getElementById("skip-btn");
 
-        topTracks.items.forEach(track => {
-          if (!seedTracks.includes(track.id) && seedTracks.length < 2) seedTracks.push(track.id);
-        });
-
-        const allSeeds = [...seedGenres, ...topArtists.items.map(a => a.name)].sort(() => 0.5 - Math.random()).slice(0, 5);
-        const query = allSeeds.join(" ") || "pop";
-        const data = await fetchSpotify(`search?q=${encodeURIComponent(query)}&type=playlist&limit=20&market=US`, token);
-
-        const container = document.getElementById("recommended-playlists");
-        container.classList.remove("opacity-100");
-        container.classList.add("opacity-0");
-        const sorted = (data.playlists?.items || []).filter(p => p && p.name && p.external_urls?.spotify);
-        const shuffled = sorted.sort(() => 0.5 - Math.random()).slice(0, 9);
-
-        const playlists = await Promise.all(shuffled.map(async (pl) => {
-          let imageUrl = "https://via.placeholder.com/300x300?text=No+Image";
-          let matchedBy = "related to your taste";
-          try {
-            const imgRes = await fetch(`https://api.spotify.com/v1/playlists/${pl.id}/images`, {
-              headers: { Authorization: `Bearer ${token}` }
-            });
-            const imgData = await imgRes.json();
-            if (Array.isArray(imgData) && imgData.length > 0) {
-              imageUrl = imgData[0].url;
-            }
-          } catch (err) {
-            console.warn(`No image found for playlist ${pl.id}`, err);
-          }
-
-          return `
-            <li class="flex flex-col items-center justify-between bg-transparent p-4 rounded text-center">
-              <img src="${imageUrl}" class="mb-2 w-40 h-40 object-cover">
-              <p class="text-base font-semibold mt-2 truncate max-w-full">${pl.name}</p>
-              <p class="text-sm text-gray-400 truncate max-w-full">${pl.owner?.display_name || 'Unknown'}</p>
-              <a href="${pl.external_urls.spotify}" target="_blank" class="mt-2 bg-green-500 hover:bg-green-600 text-black font-bold py-1 px-4 rounded-full text-sm">Open</a>
-            </li>`
-        }));
-
-        container.innerHTML = playlists.join("");
-        container.classList.remove("opacity-0");
-        container.classList.add("transition-opacity", "duration-500", "opacity-100");
-      } catch (e) {
-        console.error("Recommendation error:", e);
-      }
-    }
-
-    async function play() {
-      await fetch("https://api.spotify.com/v1/me/player/play", {
-        method: "PUT",
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      renderNowPlaying(token);
-    }
-
-    async function pause() {
-      await fetch("https://api.spotify.com/v1/me/player/pause", {
-        method: "PUT",
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      renderNowPlaying(token);
-    }
-
-    async function skip() {
-      await fetch("https://api.spotify.com/v1/me/player/next", {
-        method: "POST",
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      renderNowPlaying(token);
-    }
-</script>
+  if (playBtn) playBtn.addEventListener("click", play);
+  if (pauseBtn) pauseBtn.addEventListener("click", pause);
+  if (skipBtn) skipBtn.addEventListener("click", skip);
+});
+  </script>
 </body>
 </html>
