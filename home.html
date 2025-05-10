@@ -4,89 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Clarify - Spotify Insights</title>
-  <script src="https://cdn.tailwindcss.com">
-    async function initializeInsights(token) {
-      try {
-        const recent = await fetchSpotify("me/player/recently-played?limit=50", token);
-        const hours = Array(24).fill(0);
-        recent.items.forEach(item => {
-          const hour = new Date(item.played_at).getHours();
-          hours[hour]++;
-        });
-        const max = Math.max(...hours);
-        const peak = hours.findIndex(h => h === max);
-        document.getElementById("peak-hours").textContent = `${peak}:00 - ${peak + 1}:00 (${max} tracks)`;
-
-        const allTime = await fetchSpotify("me/top/tracks?time_range=long_term&limit=20", token);
-        const avgPop = allTime.items.reduce((sum, t) => sum + t.popularity, 0) / allTime.items.length;
-        document.getElementById("popularity-score").textContent = `${Math.round(avgPop)}/100`;
-        document.getElementById("popularity-bar").style.width = `${avgPop}%`;
-        document.getElementById("popularity-comment").textContent =
-          avgPop > 80 ? "Mainstream lover!" :
-          avgPop < 40 ? "Obscure taste detected 👀" :
-          "Nice balance! You've got a solid mix of popular and lesser-known tracks.";
-      } catch (e) {
-        console.error("Insights error:", e);
-      }
-    }
-
-    async function fetchRecommendations(token) {
-      try {
-        const topArtists = await fetchSpotify("me/top/artists?time_range=long_term&limit=10", token);
-        const topTracks = await fetchSpotify("me/top/tracks?time_range=long_term&limit=10", token);
-
-        const seedGenres = [];
-        const seedArtists = [];
-        const seedTracks = [];
-
-        topArtists.items.forEach(artist => {
-          artist.genres.forEach(genre => {
-            if (!seedGenres.includes(genre) && seedGenres.length < 5) seedGenres.push(genre);
-          });
-          if (!seedArtists.includes(artist.id) && seedArtists.length < 2) seedArtists.push(artist.id);
-        });
-
-        topTracks.items.forEach(track => {
-          if (!seedTracks.includes(track.id) && seedTracks.length < 2) seedTracks.push(track.id);
-        });
-
-        const queryParts = [...seedGenres.map(g => `genre:"${g}"`),
-                            ...seedArtists.map(a => `artist:${a}`),
-                            ...seedTracks.map(t => `track:${t}`)];
-        const query = queryParts.join(" OR ") || "genre:pop";
-        const data = await fetchSpotify(`search?q=${encodeURIComponent(query)}&type=playlist&limit=6`, token);
-
-        const container = document.getElementById("recommended-playlists");
-        const playlists = await Promise.all(data.playlists.items.map(async (pl) => {
-          let imageUrl = "https://via.placeholder.com/300x300?text=No+Image";
-          let matchedBy = "related to your taste";
-          try {
-            const imgRes = await fetch(`https://api.spotify.com/v1/playlists/${pl.id}/images`, {
-              headers: { Authorization: `Bearer ${token}` }
-            });
-            const imgData = await imgRes.json();
-            if (Array.isArray(imgData) && imgData.length > 0) {
-              imageUrl = imgData[0].url;
-            }
-          } catch (err) {
-            console.warn(`No image found for playlist ${pl.id}`, err);
-          }
-
-          return `
-            <li class="bg-[#111] p-4 rounded shadow">
-              <img src="${imageUrl}" class="rounded mb-2">
-              <p class="font-bold text-sm">${pl.name}</p>
-              <p class="text-xs text-gray-400">Matched by: ${matchedBy}</p>
-              <a href="${pl.external_urls.spotify}" target="_blank" class="text-green-400 text-xs">Open on Spotify</a>
-            </li>`;
-        }));
-
-        container.innerHTML = playlists.join("");
-      } catch (e) {
-        console.error("Recommendation error:", e);
-      }
-    }
-</script>
+  <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700&display=swap" rel="stylesheet"/>
   <style>
@@ -169,15 +87,15 @@
               <div class="text-sm text-gray-400" id="now-playing-album"></div>
             </div>
             <div class="flex items-center gap-4 mt-2">
-              <button id="pause-btn" style="display: none;">
-                <img src="https://www.svgrepo.com/show/176023/music-pause-button-pair-of-lines.svg" alt="Pause" class="w-6 h-6">
-              </button>
+              <button id="pause-btn">
+  <img src="https://www.svgrepo.com/show/176023/music-pause-button-pair-of-lines.svg" alt="Pause" class="w-6 h-6 invert">
+</button>
               <button id="play-btn">
-                <img src="https://www.svgrepo.com/show/164900/play-button-arrowhead.svg" alt="Play" class="w-6 h-6">
-              </button>
+  <img src="https://www.svgrepo.com/show/164900/play-button-arrowhead.svg" alt="Play" class="w-6 h-6 invert">
+</button>
               <button id="skip-btn">
-                <img src="https://www.svgrepo.com/show/23146/fast-forward-arrowhead-symbol.svg" alt="Skip" class="w-6 h-6">
-              </button>
+  <img src="https://www.svgrepo.com/show/23146/fast-forward-arrowhead-symbol.svg" alt="Skip" class="w-6 h-6 invert">
+</button>
             </div>
           </div>
         </div>
@@ -331,6 +249,113 @@
       if (pauseBtn) pauseBtn.addEventListener("click", pause);
       if (skipBtn) skipBtn.addEventListener("click", skip);
     });
+</script>
+<script>
+    async function initializeInsights(token) {
+      try {
+        const recent = await fetchSpotify("me/player/recently-played?limit=50", token);
+        const hours = Array(24).fill(0);
+        recent.items.forEach(item => {
+          const hour = new Date(item.played_at).getHours();
+          hours[hour]++;
+        });
+        const max = Math.max(...hours);
+        const peak = hours.findIndex(h => h === max);
+        document.getElementById("peak-hours").textContent = `${peak}:00 - ${peak + 1}:00 (${max} tracks)`;
+
+        const allTime = await fetchSpotify("me/top/tracks?time_range=long_term&limit=20", token);
+        const avgPop = allTime.items.reduce((sum, t) => sum + t.popularity, 0) / allTime.items.length;
+        document.getElementById("popularity-score").textContent = `${Math.round(avgPop)}/100`;
+        document.getElementById("popularity-bar").style.width = `${avgPop}%`;
+        document.getElementById("popularity-comment").textContent =
+          avgPop > 80 ? "Mainstream lover!" :
+          avgPop < 40 ? "Obscure taste detected 👀" :
+          "Nice balance! You've got a solid mix of popular and lesser-known tracks.";
+      } catch (e) {
+        console.error("Insights error:", e);
+      }
+    }
+
+    async function fetchRecommendations(token) {
+      try {
+        const topArtists = await fetchSpotify("me/top/artists?time_range=long_term&limit=10", token);
+        const topTracks = await fetchSpotify("me/top/tracks?time_range=long_term&limit=10", token);
+
+        const seedGenres = [];
+        const seedArtists = [];
+        const seedTracks = [];
+
+        topArtists.items.forEach(artist => {
+          artist.genres.forEach(genre => {
+            if (!seedGenres.includes(genre) && seedGenres.length < 5) seedGenres.push(genre);
+          });
+          if (!seedArtists.includes(artist.id) && seedArtists.length < 2) seedArtists.push(artist.id);
+        });
+
+        topTracks.items.forEach(track => {
+          if (!seedTracks.includes(track.id) && seedTracks.length < 2) seedTracks.push(track.id);
+        });
+
+        const queryParts = [...seedGenres.map(g => `genre:"${g}"`),
+                            ...seedArtists.map(a => `artist:${a}`),
+                            ...seedTracks.map(t => `track:${t}`)];
+        const query = queryParts.join(" OR ") || "genre:pop";
+        const data = await fetchSpotify(`search?q=${encodeURIComponent(query)}&type=playlist&limit=6`, token);
+
+        const container = document.getElementById("recommended-playlists");
+        const playlists = await Promise.all(data.playlists.items.map(async (pl) => {
+          let imageUrl = "https://via.placeholder.com/300x300?text=No+Image";
+          let matchedBy = "related to your taste";
+          try {
+            const imgRes = await fetch(`https://api.spotify.com/v1/playlists/${pl.id}/images`, {
+              headers: { Authorization: `Bearer ${token}` }
+            });
+            const imgData = await imgRes.json();
+            if (Array.isArray(imgData) && imgData.length > 0) {
+              imageUrl = imgData[0].url;
+            }
+          } catch (err) {
+            console.warn(`No image found for playlist ${pl.id}`, err);
+          }
+
+          return `
+            <li class="bg-[#111] p-4 rounded shadow">
+              <img src="${imageUrl}" class="rounded mb-2">
+              <p class="font-bold text-sm">${pl.name}</p>
+              <p class="text-xs text-gray-400">Matched by: ${matchedBy}</p>
+              <a href="${pl.external_urls.spotify}" target="_blank" class="text-green-400 text-xs">Open on Spotify</a>
+            </li>`;
+        }));
+
+        container.innerHTML = playlists.join("");
+      } catch (e) {
+        console.error("Recommendation error:", e);
+      }
+    }
+
+    async function play() {
+      await fetch("https://api.spotify.com/v1/me/player/play", {
+        method: "PUT",
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      renderNowPlaying(token);
+    }
+
+    async function pause() {
+      await fetch("https://api.spotify.com/v1/me/player/pause", {
+        method: "PUT",
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      renderNowPlaying(token);
+    }
+
+    async function skip() {
+      await fetch("https://api.spotify.com/v1/me/player/next", {
+        method: "POST",
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      renderNowPlaying(token);
+    }
 </script>
 </body>
 </html>

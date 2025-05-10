@@ -17,7 +17,7 @@ app.get('/login', (req, res) => {
     response_type: 'code',
     client_id: process.env.SPOTIFY_CLIENT_ID,
     redirect_uri: 'https://clarify-3zv7.onrender.com/callback',
-    scope: 'user-top-read user-read-playback-state user-read-currently-playing user-read-recently-played'
+    scope: 'user-top-read user-read-playback-state user-modify-playback-state user-read-currently-playing user-read-recently-played'
   });
   res.redirect(`https://accounts.spotify.com/authorize?${queryParams.toString()}`);
 });
