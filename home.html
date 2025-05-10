@@ -228,13 +228,15 @@
     const genreCount = {};
 
     const collectGenres = (artistArray) => {
-      artistArray.forEach(artist => {
-        artist.genres.forEach(raw => {
-          const genre = genreMap[raw] || raw;
-          genreCount[genre] = (genreCount[genre] || 0) + 1;
-        });
-      });
-    };
+  if (!Array.isArray(artistArray)) return;
+  artistArray.forEach(artist => {
+    if (!artist?.genres || !Array.isArray(artist.genres)) return;
+    artist.genres.forEach(raw => {
+      const genre = genreMap[raw] || raw;
+      genreCount[genre] = (genreCount[genre] || 0) + 1;
+    });
+  });
+};
 
     collectGenres(topArtists.items);
     collectGenres(topTracks.items.flatMap(t => t.artists));
