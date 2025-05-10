@@ -195,17 +195,34 @@
     }
 
     async function updateTopGenres(token) {
-      try {
-        const topGenresRes = await fetchSpotify("me/top/artists?time_range=long_term&limit=10", token);
-        const seedGenres = [];
-        const genreCount = {};
-        topGenresRes.items.forEach(artist => {
-          artist.genres.forEach(genre => {
-            genreCount[genre] = (genreCount[genre] || 0) + 1;
-            if (!seedGenres.includes(genre) && seedGenres.length < 5) seedGenres.push(genre);
-          });
-        });
-        const sortedGenres = Object.entries(genreCount).sort((a, b) => b[1] - a[1]).slice(0, 15);
+  try {
+    const topGenresRes = await fetchSpotify("me/top/artists?time_range=long_term&limit=20", token);
+    const genreMap = {
+      "escape room": "indie",
+      "brooklyn indie": "indie",
+      "indie rock": "indie",
+      "la pop": "pop",
+      "alt z": "pop",
+      "underground hip hop": "hip hop",
+      "chamber pop": "indie",
+      "bedroom pop": "pop",
+      "conscious hip hop": "hip hop",
+      "indie soul": "soul",
+      "lgbtq+ hip hop": "hip hop",
+      "dream pop": "indie",
+      "neo soul": "soul",
+      "pop rap": "rap",
+      "rap": "rap",
+      "hip hop": "hip hop"
+    };
+    const genreCount = {};
+    topGenresRes.items.forEach(artist => {
+      artist.genres.forEach(raw => {
+        const genre = genreMap[raw] || raw;
+        genreCount[genre] = (genreCount[genre] || 0) + 1;
+      });
+    });
+    const sortedGenres = Object.entries(genreCount).sort((a, b) => b[1] - a[1]).slice(0, 15);
         const container = document.getElementById("top-genres");
         container.innerHTML = '';
         sortedGenres.forEach(([genre, count], i) => {
@@ -320,12 +337,12 @@
           }
 
           return `
-            <li class="bg-[#111] p-4 rounded shadow hover:scale-105 transition-transform duration-300">
-              <img src="${imageUrl}" class="rounded mb-2 w-full aspect-square object-cover">
-              <p class="font-bold text-sm truncate">${pl.name}</p>
-              <p class="text-xs text-gray-400 truncate">${pl.description || 'Curated for you'}</p>
-              <a href="${pl.external_urls.spotify}" target="_blank" class="text-green-400 text-xs mt-1 inline-block">Open on Spotify</a>
-            </li>`;
+            <li class="flex flex-col items-center justify-between bg-transparent p-4 rounded text-center">
+              <img src="${imageUrl}" class="rounded mb-2 w-32 h-32 object-cover border-2 border-white">
+              <p class="text-base font-semibold mt-2 truncate max-w-full">${pl.name}</p>
+              <p class="text-sm text-gray-400 truncate max-w-full">${pl.owner?.display_name || 'Unknown'}</p>
+              <a href="${pl.external_urls.spotify}" target="_blank" class="mt-2 bg-green-500 hover:bg-green-600 text-black font-bold py-1 px-4 rounded-full text-sm">Open</a>
+            </li>`
         }));
 
         container.innerHTML = playlists.join("");
