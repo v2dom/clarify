@@ -129,10 +129,6 @@
   </div>
 </div>
 <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 px-6 mt-6">
-  <div class="card col-span-1">
-    <h2 class="mb-4 text-left">Average Stats</h2>
-    <div id="audio-features"></div>
-  </div>
   <div class="card col-span-full">
     <h2 class="text-xl font-bold mb-2">Explore User-Created Playlists</h2>
     <button onclick="fetchRecommendations(token)" class="mt-4 bg-white text-black text-sm font-semibold px-4 py-2 rounded hover:bg-gray-200 transition">Shuffle</button>
@@ -193,6 +189,7 @@ async function play() {
     headers: { Authorization: `Bearer ${token}` }
   });
   renderNowPlaying(token);
+    renderAudioFeatures(token);
 }
 
 async function pause() {
@@ -221,10 +218,8 @@ async function renderAudioFeatures(token) {
     valence: 0,
     tempo: 0
   };
-  const promises = data.items
-    .filter(t => t && t.id)
-    .map(t => fetchSpotify(`audio-features/${t.id}`, token).catch(() => null));
-  const results = (await Promise.all(promises)).filter(Boolean);
+  const promises = data.items.map(t => fetchSpotify(`audio-features/${t.id}`, token));
+  const results = await Promise.all(promises);
   results.forEach(f => {
     features.danceability += f.danceability;
     features.energy += f.energy;
@@ -258,7 +253,6 @@ async function initializeApp() {
     updateTopTracks(token);
     updateTopGenres(token);
     initializeInsights(token);
-    renderAudioFeatures(token);
     renderActivityChart(token);
     fetchRecommendations(token);
   } catch (e) {
