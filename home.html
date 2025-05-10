@@ -4,7 +4,89 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Clarify - Spotify Insights</title>
-  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.tailwindcss.com">
+    async function initializeInsights(token) {
+      try {
+        const recent = await fetchSpotify("me/player/recently-played?limit=50", token);
+        const hours = Array(24).fill(0);
+        recent.items.forEach(item => {
+          const hour = new Date(item.played_at).getHours();
+          hours[hour]++;
+        });
+        const max = Math.max(...hours);
+        const peak = hours.findIndex(h => h === max);
+        document.getElementById("peak-hours").textContent = `${peak}:00 - ${peak + 1}:00 (${max} tracks)`;
+
+        const allTime = await fetchSpotify("me/top/tracks?time_range=long_term&limit=20", token);
+        const avgPop = allTime.items.reduce((sum, t) => sum + t.popularity, 0) / allTime.items.length;
+        document.getElementById("popularity-score").textContent = `${Math.round(avgPop)}/100`;
+        document.getElementById("popularity-bar").style.width = `${avgPop}%`;
+        document.getElementById("popularity-comment").textContent =
+          avgPop > 80 ? "Mainstream lover!" :
+          avgPop < 40 ? "Obscure taste detected 👀" :
+          "Nice balance! You've got a solid mix of popular and lesser-known tracks.";
+      } catch (e) {
+        console.error("Insights error:", e);
+      }
+    }
+
+    async function fetchRecommendations(token) {
+      try {
+        const topArtists = await fetchSpotify("me/top/artists?time_range=long_term&limit=10", token);
+        const topTracks = await fetchSpotify("me/top/tracks?time_range=long_term&limit=10", token);
+
+        const seedGenres = [];
+        const seedArtists = [];
+        const seedTracks = [];
+
+        topArtists.items.forEach(artist => {
+          artist.genres.forEach(genre => {
+            if (!seedGenres.includes(genre) && seedGenres.length < 5) seedGenres.push(genre);
+          });
+          if (!seedArtists.includes(artist.id) && seedArtists.length < 2) seedArtists.push(artist.id);
+        });
+
+        topTracks.items.forEach(track => {
+          if (!seedTracks.includes(track.id) && seedTracks.length < 2) seedTracks.push(track.id);
+        });
+
+        const queryParts = [...seedGenres.map(g => `genre:"${g}"`),
+                            ...seedArtists.map(a => `artist:${a}`),
+                            ...seedTracks.map(t => `track:${t}`)];
+        const query = queryParts.join(" OR ") || "genre:pop";
+        const data = await fetchSpotify(`search?q=${encodeURIComponent(query)}&type=playlist&limit=6`, token);
+
+        const container = document.getElementById("recommended-playlists");
+        const playlists = await Promise.all(data.playlists.items.map(async (pl) => {
+          let imageUrl = "https://via.placeholder.com/300x300?text=No+Image";
+          let matchedBy = "related to your taste";
+          try {
+            const imgRes = await fetch(`https://api.spotify.com/v1/playlists/${pl.id}/images`, {
+              headers: { Authorization: `Bearer ${token}` }
+            });
+            const imgData = await imgRes.json();
+            if (Array.isArray(imgData) && imgData.length > 0) {
+              imageUrl = imgData[0].url;
+            }
+          } catch (err) {
+            console.warn(`No image found for playlist ${pl.id}`, err);
+          }
+
+          return `
+            <li class="bg-[#111] p-4 rounded shadow">
+              <img src="${imageUrl}" class="rounded mb-2">
+              <p class="font-bold text-sm">${pl.name}</p>
+              <p class="text-xs text-gray-400">Matched by: ${matchedBy}</p>
+              <a href="${pl.external_urls.spotify}" target="_blank" class="text-green-400 text-xs">Open on Spotify</a>
+            </li>`;
+        }));
+
+        container.innerHTML = playlists.join("");
+      } catch (e) {
+        console.error("Recommendation error:", e);
+      }
+    }
+</script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700&display=swap" rel="stylesheet"/>
   <style>
@@ -55,7 +137,7 @@
   </div>
 
   <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 px-6" id="dashboard">
-    <div class="card col-span-1 row-start-1 h-full"><h2 class="mb-4">Top Artists
+    <div class="card col-span-1"><h2 class="mb-4">Top Artists
         <select id="artist-range" onchange="initializeApp()" class="bg-black text-white ml-2">
           <option value="short_term">This Month</option>
           <option value="medium_term">Last 6 Months</option>
@@ -65,7 +147,7 @@
       <ul id="top-artists"></ul>
     </div>
 
-    <div class="card col-span-1 row-start-1 h-full"><h2 class="mb-4">Top Tracks
+    <div class="card col-span-1"><h2 class="mb-4">Top Tracks
         <select id="track-range" onchange="initializeApp()" class="bg-black text-white ml-2">
           <option value="short_term">This Month</option>
           <option value="medium_term">Last 6 Months</option>
@@ -76,34 +158,55 @@
     </div>
 
     <div class="col-span-1 flex flex-col gap-6">
-  <div class="card flex-[2] min-h-0">
-    <h2 class="text-l mb-4 text-center">Now Playing</h2>
-    <div class="flex flex-row items-center gap-6 text-left">
-  <img id="now-playing-img" src="" class="w-40 h-40 object-cover rounded-lg">
-  <div class="flex flex-col justify-between h-full">
-    <div id="now-playing-info" class="mb-4">
-      <div class="text-lg highlight" id="now-playing-title"></div>
-      
-      
+      <div class="card flex-[2] min-h-0">
+        <h2 class="text-l mb-4 text-center">Now Playing</h2>
+        <div class="flex flex-row items-center gap-6 text-left">
+          <img id="now-playing-img" src="" class="w-40 h-40 object-cover rounded-lg">
+          <div class="flex flex-col justify-between h-full">
+            <div id="now-playing-info" class="mb-4">
+              <div class="text-lg highlight" id="now-playing-title"></div>
+              <div class="text-md uppercase font-semibold" id="now-playing-artist"></div>
+              <div class="text-sm text-gray-400" id="now-playing-album"></div>
+            </div>
+            <div class="flex items-center gap-4 mt-2">
+              <button id="pause-btn" style="display: none;">
+                <img src="https://www.svgrepo.com/show/176023/music-pause-button-pair-of-lines.svg" alt="Pause" class="w-6 h-6">
+              </button>
+              <button id="play-btn">
+                <img src="https://www.svgrepo.com/show/164900/play-button-arrowhead.svg" alt="Play" class="w-6 h-6">
+              </button>
+              <button id="skip-btn">
+                <img src="https://www.svgrepo.com/show/23146/fast-forward-arrowhead-symbol.svg" alt="Skip" class="w-6 h-6">
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
 
-    <div class="col-span-3 grid grid-cols-3 gap-6">
-  <div class="card col-span-1 h-full">
-    <h2>Peak Listening Hours</h2>
-    <p id="peak-hours"></p>
-  </div>
-  <div class="card col-span-2 h-full">
-    <h2>Overall Popularity</h2>
-    <div class="mb-2 text-lg font-bold" id="popularity-score"></div>
-    <div class="w-full bg-gray-700 rounded-full h-4">
-      <div id="popularity-bar" class="popularity-meter h-4 rounded-full w-1/2"></div>
+      <div class="card flex-[1] min-h-0">
+        <h2 class="mb-4">Top Genres</h2>
+        <div id="top-genres" class="flex flex-wrap gap-2 mt-4"></div>
+      </div>
     </div>
-    <p id="popularity-comment" class="mt-2 text-sm text-gray-300"></p>
   </div>
-</div>
 
-    <div class="card col-span-full"><h2>Explore User-Created Playlists</h2>
-      <ul id="recommended-playlists" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mt-4"></ul>
+  <div class="col-span-3 grid grid-cols-3 gap-6 px-6 mt-6">
+    <div class="card col-span-1 h-full">
+      <h2>Peak Listening Hours</h2>
+      <p id="peak-hours"></p>
     </div>
+    <div class="card col-span-2 h-full">
+      <h2>Overall Popularity</h2>
+      <div class="mb-2 text-lg font-bold" id="popularity-score"></div>
+      <div class="w-full bg-gray-700 rounded-full h-4">
+        <div id="popularity-bar" class="popularity-meter h-4 rounded-full w-1/2"></div>
+      </div>
+      <p id="popularity-comment" class="mt-2 text-sm text-gray-300"></p>
+    </div>
+  </div>
+
+  <div class="card col-span-full px-6 mt-6"><h2>Explore User-Created Playlists</h2>
+    <ul id="recommended-playlists" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mt-4"></ul>
   </div>
 
   <script>
@@ -199,96 +302,6 @@
       }
     }
 
-    async function initializeInsights(token) {
-      try {
-        const recent = await fetchSpotify("me/player/recently-played?limit=50", token);
-        const hours = Array(24).fill(0);
-        recent.items.forEach(item => {
-          const hour = new Date(item.played_at).getHours();
-          hours[hour]++;
-        });
-        const max = Math.max(...hours);
-        const peak = hours.findIndex(h => h === max);
-        document.getElementById("peak-hours").textContent = `${peak}:00 - ${peak + 1}:00 (${max} tracks)`;
-
-        const allTime = await fetchSpotify("me/top/tracks?time_range=long_term&limit=20", token);
-        const avgPop = allTime.items.reduce((sum, t) => sum + t.popularity, 0) / allTime.items.length;
-        document.getElementById("popularity-score").textContent = `${Math.round(avgPop)}/100`;
-        document.getElementById("popularity-bar").style.width = `${avgPop}%`;
-        document.getElementById("popularity-comment").textContent =
-          avgPop > 80 ? "Mainstream lover!" :
-          avgPop < 40 ? "Obscure taste detected 👀" :
-          "Nice balance! You've got a solid mix of popular and lesser-known tracks.";
-      } catch (e) {
-        console.error("Insights error:", e);
-      }
-    }
-
-    async function fetchRecommendations(token) {
-      try {
-        const topArtists = await fetchSpotify("me/top/artists?time_range=long_term&limit=10", token);
-        const topTracks = await fetchSpotify("me/top/tracks?time_range=long_term&limit=10", token);
-
-        const seedGenres = [];
-        const seedArtists = [];
-        const seedTracks = [];
-
-        topArtists.items.forEach(artist => {
-          artist.genres.forEach(genre => {
-            if (!seedGenres.includes(genre) && seedGenres.length < 5) seedGenres.push(genre);
-          });
-          if (!seedArtists.includes(artist.id) && seedArtists.length < 2) seedArtists.push(artist.id);
-        });
-
-        topTracks.items.forEach(track => {
-          if (!seedTracks.includes(track.id) && seedTracks.length < 2) seedTracks.push(track.id);
-        });
-
-        const queryParts = [...seedGenres.map(g => `genre:\"${g}\"`),
-                            ...seedArtists.map(a => `artist:${a}`),
-                            ...seedTracks.map(t => `track:${t}`)];
-        const query = queryParts.join(" OR ") || "genre:pop";
-        const data = await fetchSpotify(`search?q=${encodeURIComponent(query)}&type=playlist&limit=6`, token);
-
-        const container = document.getElementById("recommended-playlists");
-        const playlists = await Promise.all(data.playlists.items.map(async (pl) => {
-          let imageUrl = "https://via.placeholder.com/300x300?text=No+Image";
-          let matchedBy = "related to your taste";
-          try {
-            const imgRes = await fetch(`https://api.spotify.com/v1/playlists/${pl.id}/images`, {
-              headers: { Authorization: `Bearer ${token}` }
-            });
-            const imgData = await imgRes.json();
-            if (Array.isArray(imgData) && imgData.length > 0) {
-              imageUrl = imgData[0].url;
-            }
-          } catch (err) {
-            console.warn(`No image found for playlist ${pl.id}`, err);
-          }
-
-          const lowerName = pl.name.toLowerCase();
-          const match = [...seedGenres, ...seedArtists, ...seedTracks].find(seed => lowerName.includes(seed.toLowerCase()));
-          if (match) {
-            if (seedGenres.includes(match)) matchedBy = `genre: ${match}`;
-            else if (seedArtists.includes(match)) matchedBy = `artist ID: ${match}`;
-            else if (seedTracks.includes(match)) matchedBy = `track ID: ${match}`;
-          }
-
-          return `
-            <li class="bg-[#111] p-4 rounded shadow">
-              <img src="${imageUrl}" class="rounded mb-2">
-              <p class="font-bold text-sm">${pl.name}</p>
-              <p class="text-xs text-gray-400">Matched by: ${matchedBy}</p>
-              <a href="${pl.external_urls.spotify}" target="_blank" class="text-green-400 text-xs">Open on Spotify</a>
-            </li>`;
-        }));
-
-        container.innerHTML = playlists.join("");
-      } catch (e) {
-        console.error("Recommendation error:", e);
-      }
-    }
-
     async function initializeApp() {
       if (!token) return window.location.href = "/clarify";
       try {
@@ -310,34 +323,14 @@
 
     window.addEventListener("DOMContentLoaded", () => {
       initializeApp();
-      document.getElementById("play-btn").addEventListener("click", play);
-      document.getElementById("pause-btn").addEventListener("click", pause);
-      document.getElementById("skip-btn").addEventListener("click", skip);
+      const playBtn = document.getElementById("play-btn");
+      const pauseBtn = document.getElementById("pause-btn");
+      const skipBtn = document.getElementById("skip-btn");
+
+      if (playBtn) playBtn.addEventListener("click", play);
+      if (pauseBtn) pauseBtn.addEventListener("click", pause);
+      if (skipBtn) skipBtn.addEventListener("click", skip);
     });
-
-    async function play() {
-      await fetch("https://api.spotify.com/v1/me/player/play", {
-        method: "PUT",
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      renderNowPlaying(token);
-    }
-
-    async function pause() {
-      await fetch("https://api.spotify.com/v1/me/player/pause", {
-        method: "PUT",
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      renderNowPlaying(token);
-    }
-
-    async function skip() {
-      await fetch("https://api.spotify.com/v1/me/player/next", {
-        method: "POST",
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      renderNowPlaying(token);
-    }
-  </script>
+</script>
 </body>
 </html>
