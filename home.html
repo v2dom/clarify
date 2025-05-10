@@ -101,7 +101,7 @@
         </div>
       </div>
 
-      <div class="card">
+      <div class="card flex-1">
         <h2 class="mb-4">Top Genres</h2>
         <div id="top-genres" class="flex flex-wrap gap-2 mt-4"></div>
       </div>
@@ -206,24 +206,7 @@
       fetchSpotify("me/player/recently-played?limit=50", token)
     ]);
 
-    const genreMap = {
-      "escape room": "indie",
-      "brooklyn indie": "indie",
-      "indie rock": "indie",
-      "la pop": "pop",
-      "alt z": "pop",
-      "underground hip hop": "hip hop",
-      "chamber pop": "indie",
-      "bedroom pop": "pop",
-      "conscious hip hop": "hip hop",
-      "indie soul": "soul",
-      "lgbtq+ hip hop": "hip hop",
-      "dream pop": "indie",
-      "neo soul": "soul",
-      "pop rap": "rap",
-      "rap": "rap",
-      "hip hop": "hip hop"
-    };
+    
 
     const genreCount = {};
 
@@ -232,7 +215,7 @@
   artistArray.forEach(artist => {
     if (!artist?.genres || !Array.isArray(artist.genres)) return;
     artist.genres.forEach(raw => {
-      const genre = genreMap[raw] || raw;
+      const genre = raw;
       genreCount[genre] = (genreCount[genre] || 0) + 1;
     });
   });
