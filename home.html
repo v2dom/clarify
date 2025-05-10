@@ -324,7 +324,7 @@
         const container = document.getElementById("recommended-playlists");
         container.classList.remove("opacity-100");
         container.classList.add("opacity-0");
-        const sorted = (data.playlists.items || []).filter(p => p.name && p.external_urls?.spotify);
+        const sorted = (data.playlists?.items || []).filter(p => p && p.name && p.external_urls?.spotify);
         const shuffled = sorted.sort(() => 0.5 - Math.random()).slice(0, 9);
 
         const playlists = await Promise.all(shuffled.map(async (pl) => {
