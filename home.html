@@ -123,8 +123,12 @@
     </div>
   </div>
 
-  <div class="card col-span-full px-6 mt-6"><h2>Explore User-Created Playlists</h2>
-    <ul id="recommended-playlists" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mt-4"></ul>
+  <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 px-6 mt-6">
+    <div class="card col-span-full">
+      <h2 class="text-xl font-bold mb-2">Explore User-Created Playlists</h2>
+    <button onclick="fetchRecommendations(token)" class="mt-4 bg-white text-black text-sm font-semibold px-4 py-2 rounded hover:bg-gray-200 transition">Shuffle</button>
+    <ul id="recommended-playlists" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mt-4"></ul>
+    </div>
   </div>
 
   <script>
@@ -319,7 +323,7 @@
         const data = await fetchSpotify(`search?q=${encodeURIComponent(query)}&type=playlist&limit=20&market=US`, token);
 
         const container = document.getElementById("recommended-playlists");
-        const sorted = data.playlists.items.sort((a, b) => (b.followers?.total || 0) - (a.followers?.total || 0));
+        const sorted = (data.playlists.items || []).filter(p => p.name && p.external_urls?.spotify);
 
         const playlists = await Promise.all(sorted.map(async (pl) => {
           let imageUrl = "https://via.placeholder.com/300x300?text=No+Image";
@@ -338,11 +342,11 @@
 
           return `
             <li class="flex flex-col items-center justify-between bg-transparent p-4 rounded text-center">
-  <img src="${imageUrl}" class="mb-2 w-40 h-40 object-cover border-2 border-white">
-  <p class="text-base font-semibold mt-2 truncate max-w-full">${pl.name}</p>
-  <p class="text-sm text-gray-400 truncate max-w-full">${pl.owner?.display_name || 'Unknown'}</p>
-  <a href="${pl.external_urls.spotify}" target="_blank" class="mt-2 bg-green-500 hover:bg-green-600 text-black font-bold py-1 px-4 rounded-full text-sm">Open</a>
-</li>`
+              <img src="${imageUrl}" class="mb-2 w-full aspect-square object-cover">
+              <p class="text-base font-semibold mt-2 truncate max-w-full">${pl.name}</p>
+              <p class="text-sm text-gray-400 truncate max-w-full">${pl.owner?.display_name || 'Unknown'}</p>
+              <a href="${pl.external_urls.spotify}" target="_blank" class="mt-2 bg-green-500 hover:bg-green-600 text-black font-bold py-1 px-4 rounded-full text-sm">Open</a>
+            </li>`
         }));
 
         container.innerHTML = playlists.join("");
