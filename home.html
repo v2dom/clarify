@@ -39,12 +39,12 @@
       align-items: center;
       margin-bottom: 10px;
     }
-    .card ul li img {
-      width: 50px;
-      height: 50px;
-      border-radius: 50%;
-      margin-right: 10px;
-    }
+    .card ul#top-artists li img, .card ul#top-tracks li img {
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  margin-right: 10px;
+}
   </style>
 </head>
 <body class="bg-black text-white">
@@ -318,8 +318,7 @@
           if (!seedTracks.includes(track.id) && seedTracks.length < 2) seedTracks.push(track.id);
         });
 
-        const queryParts = seedGenres.map(g => `genre:"${g}"`);
-        const query = queryParts.join(" OR ") || "genre:pop";
+        const query = seedGenres.join(" ") || "pop";
         const data = await fetchSpotify(`search?q=${encodeURIComponent(query)}&type=playlist&limit=20&market=US`, token);
 
         const container = document.getElementById("recommended-playlists");
