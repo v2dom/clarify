@@ -4,40 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Clarify - Spotify Insights</title>
-  <script src="https://cdn.tailwindcss.com">
-const ctx = document.getElementById("activityChart").getContext("2d");
-function renderActivityChart(token) {
-  fetchSpotify("me/player/recently-played?limit=50", token).then(data => {
-    const timestamps = data.items.map(i => new Date(i.played_at));
-    const oldest = timestamps[timestamps.length - 1];
-    const newest = timestamps[0];
-    const hoursSpan = (newest - oldest) / 1000 / 60 / 60;
-    const score = Math.max(1, Math.floor(50 / Math.max(1, hoursSpan)));
-
-    new Chart(ctx, {
-      type: "line",
-      data: {
-        labels: timestamps.map(t => t.toLocaleTimeString()),
-        datasets: [{
-          label: "Tracks Played",
-          data: timestamps.map(() => 1),
-          fill: false,
-          borderColor: "#22c55e",
-          tension: 0.3
-        }]
-      },
-      options: {
-        responsive: true,
-        plugins: { legend: { display: false } },
-        scales: { y: { display: false }, x: { display: false } }
-      }
-    });
-
-    const tier = score > 10 ? "top 1%" : score > 5 ? "top 5%" : score > 2 ? "top 25%" : "bottom 60%";
-    document.getElementById("activityLabel").innerHTML = `<span class='text-green-400 font-semibold'>${tier.toUpperCase()}</span> of all Spotify listeners — based on how fast you played your last 50 songs.`;
-  });
-}
-</script>
+  <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700&display=swap" rel="stylesheet"/>
   <style>
@@ -130,18 +97,11 @@ function renderActivityChart(token) {
   <img src="https://www.svgrepo.com/show/23146/fast-forward-arrowhead-symbol.svg" alt="Skip" class="w-6 h-6 invert">
 </button>
             </div>
-        <div class="mt-6">
-  <h3 class="text-md font-bold text-white tracking-wide uppercase mb-3 border-b border-gray-700 pb-1">Listening Activity Rank</h3>
-          <div class="bg-[#111] rounded-xl p-4 shadow-inner">
-    <canvas id="activityChart" class="w-full h-28"></canvas>
-  </div>
-          <p id="activityLabel" class="text-sm text-gray-400 mt-2 text-center"></p>
+          </div>
         </div>
       </div>
-    </div>
-      </div>
 
-      <div class="card flex-1 flex flex-col justify-between">
+      <div class="card flex-1">
         <h2 class="mb-4">Top Genres</h2>
         <div id="top-genres" class="flex flex-wrap gap-2 mt-4"></div>
       </div>
@@ -294,7 +254,6 @@ function renderActivityChart(token) {
         updateTopTracks(token);
         updateTopGenres(token);
         initializeInsights(token);
-        renderActivityChart(token);
         fetchRecommendations(token);
       } catch (e) {
         console.error("Init error:", e);
