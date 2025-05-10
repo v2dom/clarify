@@ -316,7 +316,7 @@
 
         const queryParts = seedGenres.map(g => `genre:"${g}"`);
         const query = queryParts.join(" OR ") || "genre:pop";
-        const data = await fetchSpotify(`search?q=${encodeURIComponent(query)}&type=playlist&limit=6&market=US`, token);
+        const data = await fetchSpotify(`search?q=${encodeURIComponent(query)}&type=playlist&limit=20&market=US`, token);
 
         const container = document.getElementById("recommended-playlists");
         const sorted = data.playlists.items.sort((a, b) => (b.followers?.total || 0) - (a.followers?.total || 0));
@@ -338,11 +338,11 @@
 
           return `
             <li class="flex flex-col items-center justify-between bg-transparent p-4 rounded text-center">
-              <img src="${imageUrl}" class="rounded mb-2 w-32 h-32 object-cover border-2 border-white">
-              <p class="text-base font-semibold mt-2 truncate max-w-full">${pl.name}</p>
-              <p class="text-sm text-gray-400 truncate max-w-full">${pl.owner?.display_name || 'Unknown'}</p>
-              <a href="${pl.external_urls.spotify}" target="_blank" class="mt-2 bg-green-500 hover:bg-green-600 text-black font-bold py-1 px-4 rounded-full text-sm">Open</a>
-            </li>`
+  <img src="${imageUrl}" class="mb-2 w-40 h-40 object-cover border-2 border-white">
+  <p class="text-base font-semibold mt-2 truncate max-w-full">${pl.name}</p>
+  <p class="text-sm text-gray-400 truncate max-w-full">${pl.owner?.display_name || 'Unknown'}</p>
+  <a href="${pl.external_urls.spotify}" target="_blank" class="mt-2 bg-green-500 hover:bg-green-600 text-black font-bold py-1 px-4 rounded-full text-sm">Open</a>
+</li>`
         }));
 
         container.innerHTML = playlists.join("");
