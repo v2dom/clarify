@@ -323,9 +323,12 @@
         const data = await fetchSpotify(`search?q=${encodeURIComponent(query)}&type=playlist&limit=20&market=US`, token);
 
         const container = document.getElementById("recommended-playlists");
+        container.classList.remove("opacity-100");
+        container.classList.add("opacity-0");
         const sorted = (data.playlists.items || []).filter(p => p.name && p.external_urls?.spotify);
+        const shuffled = sorted.sort(() => 0.5 - Math.random()).slice(0, 9);
 
-        const playlists = await Promise.all(sorted.map(async (pl) => {
+        const playlists = await Promise.all(shuffled.map(async (pl) => {
           let imageUrl = "https://via.placeholder.com/300x300?text=No+Image";
           let matchedBy = "related to your taste";
           try {
@@ -342,7 +345,7 @@
 
           return `
             <li class="flex flex-col items-center justify-between bg-transparent p-4 rounded text-center">
-              <img src="${imageUrl}" class="mb-2 w-full aspect-square object-cover">
+              <img src="${imageUrl}" class="mb-2 w-40 h-40 object-cover">
               <p class="text-base font-semibold mt-2 truncate max-w-full">${pl.name}</p>
               <p class="text-sm text-gray-400 truncate max-w-full">${pl.owner?.display_name || 'Unknown'}</p>
               <a href="${pl.external_urls.spotify}" target="_blank" class="mt-2 bg-green-500 hover:bg-green-600 text-black font-bold py-1 px-4 rounded-full text-sm">Open</a>
@@ -350,6 +353,8 @@
         }));
 
         container.innerHTML = playlists.join("");
+        container.classList.remove("opacity-0");
+        container.classList.add("transition-opacity", "duration-500", "opacity-100");
       } catch (e) {
         console.error("Recommendation error:", e);
       }
