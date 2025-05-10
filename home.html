@@ -193,8 +193,6 @@ async function play() {
     headers: { Authorization: `Bearer ${token}` }
   });
   renderNowPlaying(token);
-    renderAudioFeatures(token);
-    renderAudioFeatures(token);
 }
 
 async function pause() {
@@ -260,6 +258,7 @@ async function initializeApp() {
     updateTopTracks(token);
     updateTopGenres(token);
     initializeInsights(token);
+    renderAudioFeatures(token);
     renderActivityChart(token);
     fetchRecommendations(token);
   } catch (e) {
