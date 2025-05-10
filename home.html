@@ -241,6 +241,7 @@
 
     window.addEventListener("DOMContentLoaded", () => {
       initializeApp();
+      setInterval(() => renderNowPlaying(token), 5000);
       const playBtn = document.getElementById("play-btn");
       const pauseBtn = document.getElementById("pause-btn");
       const skipBtn = document.getElementById("skip-btn");
@@ -296,14 +297,14 @@
           if (!seedTracks.includes(track.id) && seedTracks.length < 2) seedTracks.push(track.id);
         });
 
-        const queryParts = [...seedGenres.map(g => `genre:"${g}"`),
-                            ...seedArtists.map(a => `artist:${a}`),
-                            ...seedTracks.map(t => `track:${t}`)];
+        const queryParts = seedGenres.map(g => `genre:"${g}"`);
         const query = queryParts.join(" OR ") || "genre:pop";
-        const data = await fetchSpotify(`search?q=${encodeURIComponent(query)}&type=playlist&limit=6`, token);
+        const data = await fetchSpotify(`search?q=${encodeURIComponent(query)}&type=playlist&limit=6&market=US`, token);
 
         const container = document.getElementById("recommended-playlists");
-        const playlists = await Promise.all(data.playlists.items.map(async (pl) => {
+        const sorted = data.playlists.items.sort((a, b) => (b.followers?.total || 0) - (a.followers?.total || 0));
+
+        const playlists = await Promise.all(sorted.map(async (pl) => {
           let imageUrl = "https://via.placeholder.com/300x300?text=No+Image";
           let matchedBy = "related to your taste";
           try {
@@ -319,11 +320,11 @@
           }
 
           return `
-            <li class="bg-[#111] p-4 rounded shadow">
-              <img src="${imageUrl}" class="rounded mb-2">
-              <p class="font-bold text-sm">${pl.name}</p>
-              <p class="text-xs text-gray-400">Matched by: ${matchedBy}</p>
-              <a href="${pl.external_urls.spotify}" target="_blank" class="text-green-400 text-xs">Open on Spotify</a>
+            <li class="bg-[#111] p-4 rounded shadow hover:scale-105 transition-transform duration-300">
+              <img src="${imageUrl}" class="rounded mb-2 w-full aspect-square object-cover">
+              <p class="font-bold text-sm truncate">${pl.name}</p>
+              <p class="text-xs text-gray-400 truncate">${pl.description || 'Curated for you'}</p>
+              <a href="${pl.external_urls.spotify}" target="_blank" class="text-green-400 text-xs mt-1 inline-block">Open on Spotify</a>
             </li>`;
         }));
 
