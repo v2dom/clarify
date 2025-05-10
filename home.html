@@ -101,9 +101,9 @@
         </div>
       </div>
 
-      <div class="card flex-none">
+      <div class="card">
         <h2 class="mb-4">Top Genres</h2>
-        <div id="top-genres" class="flex flex-wrap gap-2 mt-4 max-h-48 overflow-y-auto"></div>
+        <div id="top-genres" class="flex flex-wrap gap-2 mt-4"></div>
       </div>
     </div>
   </div>
@@ -200,7 +200,12 @@
 
     async function updateTopGenres(token) {
   try {
-    const topGenresRes = await fetchSpotify("me/top/artists?time_range=long_term&limit=20", token);
+    const [topArtists, topTracks, recent] = await Promise.all([
+      fetchSpotify("me/top/artists?time_range=long_term&limit=20", token),
+      fetchSpotify("me/top/tracks?time_range=long_term&limit=20", token),
+      fetchSpotify("me/player/recently-played?limit=50", token)
+    ]);
+
     const genreMap = {
       "escape room": "indie",
       "brooklyn indie": "indie",
@@ -219,27 +224,37 @@
       "rap": "rap",
       "hip hop": "hip hop"
     };
+
     const genreCount = {};
-    topGenresRes.items.forEach(artist => {
-      artist.genres.forEach(raw => {
-        const genre = genreMap[raw] || raw;
-        genreCount[genre] = (genreCount[genre] || 0) + 1;
-      });
-    });
-    const sortedGenres = Object.entries(genreCount).sort((a, b) => b[1] - a[1]).slice(0, 15);
-        const container = document.getElementById("top-genres");
-        container.innerHTML = '';
-        sortedGenres.forEach(([genre, count], i) => {
-          const span = document.createElement('span');
-          span.textContent = genre;
-          span.className = `inline-block px-3 py-1 rounded-full text-sm font-semibold text-black bg-green-400 transition transform hover:scale-105`;
-          span.style.fontSize = `${1 + (15 - i) * 0.05}rem`;
-          container.appendChild(span);
+
+    const collectGenres = (artistArray) => {
+      artistArray.forEach(artist => {
+        artist.genres.forEach(raw => {
+          const genre = genreMap[raw] || raw;
+          genreCount[genre] = (genreCount[genre] || 0) + 1;
         });
-      } catch (e) {
-        console.error("Top genres error:", e);
-      }
-    }
+      });
+    };
+
+    collectGenres(topArtists.items);
+    collectGenres(topTracks.items.flatMap(t => t.artists));
+    collectGenres(recent.items.flatMap(i => i.track.artists));
+
+    const sortedGenres = Object.entries(genreCount).sort((a, b) => b[1] - a[1]).slice(0, 30);
+    const container = document.getElementById("top-genres");
+    container.innerHTML = '';
+    sortedGenres.forEach(([genre, count], i) => {
+      const span = document.createElement('span');
+      span.textContent = genre;
+      span.className = `inline-block px-3 py-1 rounded-full text-sm font-semibold text-black bg-green-400 transition transform hover:scale-105`;
+      span.style.fontSize = `${1 + (30 - i) * 0.02}rem`;
+      container.appendChild(span);
+    });
+  } catch (e) {
+    console.error("Top genres error:", e);
+  }
+};
+
 
     async function initializeApp() {
       if (!token) return window.location.href = "/clarify";
@@ -318,7 +333,8 @@
           if (!seedTracks.includes(track.id) && seedTracks.length < 2) seedTracks.push(track.id);
         });
 
-        const query = seedGenres.join(" ") || "pop";
+        const allSeeds = [...seedGenres, ...topArtists.items.map(a => a.name)].sort(() => 0.5 - Math.random()).slice(0, 5);
+        const query = allSeeds.join(" ") || "pop";
         const data = await fetchSpotify(`search?q=${encodeURIComponent(query)}&type=playlist&limit=20&market=US`, token);
 
         const container = document.getElementById("recommended-playlists");
