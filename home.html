@@ -7,8 +7,10 @@
   <script src="https://cdn.tailwindcss.com"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
-const ctx = document.getElementById("activityChart").getContext("2d");
 function renderActivityChart(token) {
+  const canvas = document.getElementById("activityChart");
+  if (!canvas) return;
+  const ctx = canvas.getContext("2d");
   fetchSpotify("me/player/recently-played?limit=50", token).then(data => {
     const timestamps = data.items.map(i => new Date(i.played_at));
     const oldest = timestamps[timestamps.length - 1];
