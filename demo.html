@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Clarify - Demo</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700&display=swap" rel="stylesheet" />
+  <style>
+    body {
+      font-family: 'Montserrat', sans-serif;
+    }
+    .card {
+      background-color: #1e1f22;
+      border-radius: 10px;
+      padding: 20px;
+      color: white;
+    }
+    .highlight {
+      color: #22c55e;
+    }
+    .popularity-meter {
+      height: 20px;
+      border-radius: 9999px;
+      background: linear-gradient(to right, #22c55e, #facc15, #ef4444);
+    }
+    .card ul li {
+      display: flex;
+      align-items: center;
+      margin-bottom: 10px;
+    }
+    .card ul#top-artists li img,
+    .card ul#top-tracks li img {
+      width: 50px;
+      height: 50px;
+      border-radius: 50%;
+      margin-right: 10px;
+    }
+  </style>
+</head>
+<body class="bg-black text-white">
+  <div class="text-center p-6">
+    <h1 class="text-4xl font-bold text-green-500">Clarify Demo</h1>
+    <p class="text-xl mt-2">This is a demo using static data. If you would like to access Clarify using your real Spotify data, contact me at <a href="mailto:dominick@v2dom.dev" style="color:green;">dominick@v2dom.dev</a> to become a test user!</p>
+    <a href="/clarify" class="text-green-400 underline text-sm">Back to Login</a>
+  </div>
+
+  <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 px-6">
+    <div class="card col-span-1">
+    <h2 class="mb-4">Top Artists</h2>
+    <ul id="top-artists">
+      <li><img src="https://i.scdn.co/image/ab6761610000e5ebaf586afa2b397f1288683a76" alt="cover"><div><strong style="color: gold">1. The Marías</strong></div></li>
+      <li><img src="https://i.scdn.co/image/ab6761610000e5eb6bf10d74063b45938f5d8656" alt="cover"><div><strong style="color: silver">2. PinkPantheress</strong></div></li>
+      <li><img src="https://i.scdn.co/image/ab6761610000e5eb4804c4a44c85afea1a72d1bd" alt="cover"><div><strong style="color: #cd7f32">3. Clairo</strong></div></li>
+      <li><img src="https://i.scdn.co/image/ab6761610000e5ebe5bc630548fb3517cf90edb8" alt="cover"><div><strong>4. Daniel Caesar</strong></div></li>
+      <li><img src="https://i.scdn.co/image/ab6761610000e5eb1a71e6bf0856e0cfaf4581d0" alt="cover"><div><strong>5. Malcolm Todd</strong></div></li>
+      <li><img src="https://i.scdn.co/image/ab6761610000e5ebfd30ebd7e80dad6b2383aab0" alt="cover"><div><strong>6. Men I Trust</strong></div></li>
+      <li><img src="https://i.scdn.co/image/ab6761610000e5eb4935804c2a7f4d6a22525607" alt="cover"><div><strong>7. Faye Webster</strong></div></li>
+      <li><img src="https://i.scdn.co/image/ab6761610000e5eb35869fcd31b5d3252d636595" alt="cover"><div><strong>8. Cuco</strong></div></li>
+      <li><img src="https://i.scdn.co/image/ab6761610000e5ebdfa2b0c7544a772042a12e52" alt="cover"><div><strong>9. Tyler, The Creator</strong></div></li>
+      <li><img src="https://i.scdn.co/image/ab6761610000e5ebee3123e593174208f9754fab" alt="cover"><div><strong>10. Frank Ocean</strong></div></li>
+    </ul>
+  </div>
+  <div class="card col-span-1">
+    <h2 class="mb-4">Top Tracks</h2>
+    <ul id="top-tracks">
+      <li><img src="https://i.scdn.co/image/ab67616d0000b273193c2fafdce8f116b5ca0a78" alt="cover"><div><strong style="color: gold">1. Terrapin</strong><br><small>Clairo</small></div></li>
+      <li><img src="https://i.scdn.co/image/ab67616d0000b2730924b9c6232d2348d4efa0dc" alt="cover"><div><strong style="color: silver">2. Only in My Dreams</strong><br><small>The Marías</small></div></li>
+      <li><img src="https://i.scdn.co/image/ab67616d0000b2737aede4855f6d0d738012e2e5" alt="cover"><div><strong style="color: #cd7f32">3. Monks</strong><br><small>Frank Ocean</small></div></li>
+      <li><img src="https://i.scdn.co/image/ab67616d0000b273dd4912edb4982f53a381b98e" alt="cover"><div><strong>4. Tonight</strong><br><small>PinkPantheress</small></div></li>
+      <li><img src="https://i.scdn.co/image/ab67616d0000b2730e718332668b9442fdeb8fb2" alt="cover"><div><strong>5. VIRGINIA CREEPER</strong><br><small>greek</small></div></li>
+      <li><img src="https://i.scdn.co/image/ab67616d0000b273228d31c8b21605ed4a04923b" alt="cover"><div><strong>6. Back To Me</strong><br><small>The Marías</small></div></li>
+      <li><img src="https://i.scdn.co/image/ab67616d0000b273f0923a06c895b3f507f1f7b3" alt="cover"><div><strong>7. But Not Kiss</strong><br><small>Faye Webster</small></div></li>
+      <li><img src="https://i.scdn.co/image/ab67616d0000b27343460a075329cfcb79d32f47" alt="cover"><div><strong>8. Curious</strong><br><small>Rich Brian</small></div></li>
+      <li><img src="https://i.scdn.co/image/ab67616d0000b27312e36c27d935e955b44c6581" alt="cover"><div><strong>9. Another life (feat. Rema)</strong><br><small>PinkPantheress, Rema</small></div></li>
+      <li><img src="https://i.scdn.co/image/ab67616d0000b2732802d4dbc9dfd83ba79290ca" alt="cover"><div><strong>10. IN THE MOMENT feat. Tyler, The Creator</strong><br><small>Snoh Aalegra, Tyler, The Creator</small></div></li>
+    </ul>
+  </div>
+    <div class="col-span-1 flex flex-col gap-6">
+      <div class="card">
+        <h2 class="mb-4 text-left">Now Playing</h2>
+        <div class="flex flex-row items-center gap-6 text-left">
+          <img src="https://i.scdn.co/image/ab67616d0000b273193c2fafdce8f116b5ca0a78" class="w-40 h-40 object-cover rounded-lg">
+          <div class="flex flex-col justify-between h-full">
+            <div class="mb-4">
+              <div class="text-lg highlight">Terrapin</div>
+              <div class="text-md uppercase font-semibold">Clairo</div>
+              <div class="text-sm text-gray-400">Charm</div>
+            </div>
+            <div class="flex items-center gap-4 mt-2">
+              <img src="https://www.svgrepo.com/show/176023/music-pause-button-pair-of-lines.svg" alt="Pause" class="w-6 h-6 invert">
+              <img src="https://www.svgrepo.com/show/23146/fast-forward-arrowhead-symbol.svg" alt="Skip" class="w-6 h-6 invert">
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="card mt-4">
+        <h2 class="mb-4 text-left">Listening Activity Rank</h2>
+        <canvas id="activityChart" class="w-full h-40"></canvas>
+        <p class="text-sm text-gray-400 mt-2 text-center"><span class='text-green-400 font-semibold'>TOP 50%</span> — based on demo activity.</p>
+      </div>
+      <div class="card flex-1 flex flex-col justify-between">
+        <h2 class="mb-4">Top Genres</h2>
+        <div id="top-genres" class="flex flex-wrap gap-2 mt-4">
+          <span class="inline-block px-3 py-1 rounded-full text-sm font-semibold text-black bg-green-400">Synthwave</span>
+          <span class="inline-block px-3 py-1 rounded-full text-sm font-semibold text-black bg-green-400">R&B</span>
+          <span class="inline-block px-3 py-1 rounded-full text-sm font-semibold text-black bg-green-400">Indie Pop</span>
+          <span class="inline-block px-3 py-1 rounded-full text-sm font-semibold text-black bg-green-400">Bedroom Pop</span>
+          <span class="inline-block px-3 py-1 rounded-full text-sm font-semibold text-black bg-green-400">Neo Soul</span>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 px-6 mt-6">
+    <div class="card col-span-1 h-full">
+      <h2>Peak Listening Hour</h2>
+      <p id="peak-hours" class=text-2xl><br>5:00 - 6:00 (10 tracks played)</p>
+    </div>
+    <div class="card col-span-2 h-full">
+      <h2>Overall Popularity</h2>
+      <div class="mb-2 text-lg font-bold" id="popularity-score">50/100</div>
+      <div class="w-full bg-gray-700 rounded-full h-4">
+        <div id="popularity-bar" class="popularity-meter h-4 rounded-full" style="width: 50%"></div>
+      </div>
+      <p id="popularity-comment" class="mt-2 text-sm text-gray-300">Nice balance! You've got a solid mix of popular and lesser-known tracks.</p>
+    </div>
+  </div>
+  <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 px-6 mt-6">
+    <div class="card col-span-full">
+      <h2 class="mb-4">Explore User-Created Playlists</h2>
+      <button onclick="shufflePlaylists()" class="mt-4 bg-white text-black text-sm font-semibold px-4 py-2 rounded hover:bg-gray-200 transition">Shuffle</button>
+      <ul id="recommended-playlists" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mt-4"></ul>
+    </div>
+  </div>
+
+  <script>
+    const playlists = [
+      "2xT3ZPE51ewIFa3dLLpkSa", // Rap Bangers Only - playlist by ethan.baldwin-nz | Spotify
+      "1TYU55CXL4BeJBa96wZa22", // Songs to blast in the car - playlist by Giancarlo | Spotify
+      "7JFn4HcMjyfSJs7IMSycrc", // ethereal dreamy songs - playlist by lily ✧︎ | Spotify
+      "1Kgkkup7w9qvGxGJGa75PS", // Divorced Dad Rock: BANGERZ - playlist by Kelly Parisi | Spotify
+      "6Uh3FqapB8aCX1hzMIkZvi", // soft love songs ♡ - playlist by ! mimi ˚⊹♡ (flw🔙) | Spotify
+      "0S6JnbD1CwKNPiSXgv6PSf", // tyler,kendrick,frank ocean,childish gambino,steve lacy,kali uchis,daniel caesar,mac miller,brent,sza - playlist by pandora | Spotify
+      "3rq6CQM7q1nDf97axF4qSx", // the strokes, the smiths, the cure, radiohead, deftones, etc. - playlist by anna | Spotify
+      "1WHZh508Om2o6yGj3LHwFm", // Radio Hits (Clean Playlist) - playlist by Yemoja | Spotify
+      "5hXeRvuTy3Qcduqb1sNYca" // drunk karaoke 🎤  - playlist by Rose Kwong | Spotify
+    ];
+
+    function shufflePlaylists() {
+      const data = [
+        {
+          id: "5hXeRvuTy3Qcduqb1sNYca",
+          title: "drunk karaoke 🎤",
+          creator: "Rose Kwong",
+          img: "https://image-cdn-ak.spotifycdn.com/image/ab67706c0000da846bb3d1ca7a9b0a10c8adfca4"
+        },
+        {
+          id: "2xT3ZPE51ewIFa3dLLpkSa",
+          title: "Rap Bangers Only",
+          creator: "ethan.baldwin-nz",
+          img: "https://mosaic.scdn.co/640/ab67616d00001e02c6e0948bbb0681ff29cdbae8ab67616d00001e02cdb645498cd3d8a2db4d05e1ab67616d00001e02d9194aa18fa4c9362b47464fab67616d00001e02f54b99bf27cda88f4a7403ce"
+        },
+        {
+          id: "6Uh3FqapB8aCX1hzMIkZvi",
+          title: "soft love songs ♡",
+          creator: "! mimi ˚⊹♡ (flw🖙)",
+          img: "https://image-cdn-ak.spotifycdn.com/image/ab67706c0000da8480cadac9a78d26b05d4cd9fd"
+        },
+        {
+          id: "1Kgkkup7w9qvGxGJGa75PS",
+          title: "Divorced Dad Rock: BANGERZ",
+          creator: "Kelly Parisi",
+          img: "https://image-cdn-fa.spotifycdn.com/image/ab67706c0000da84b2da1ede95a885fe770ac31c"
+        },
+        {
+          id: "1TYU55CXL4BeJBa96wZa22",
+          title: "Songs to blast in the car",
+          creator: "Giancarlo",
+          img: "https://image-cdn-ak.spotifycdn.com/image/ab67706c0000d72c08ec96f4bbc658ab69aab47f"
+        },
+        {
+          id: "1WHZh508Om2o6yGj3LHwFm",
+          title: "Radio Hits (Clean Playlist)",
+          creator: "Yemoja",
+          img: "https://mosaic.scdn.co/640/ab67616d00001e02026e88f624dfb96f2e1ef10bab67616d00001e0247f930accd8ac01686401fa2ab67616d00001e02754b2fddebe7039fdb912837ab67616d00001e02b234aeff6eedc8276fe0333a"
+        },
+        {
+          id: "0S6JnbD1CwKNPiSXgv6PSf",
+          title: "tyler,kendrick,frank ocean...",
+          creator: "pandora",
+          img: "https://mosaic.scdn.co/640/ab67616d00001e02026e88f624dfb96f2e1ef10bab67616d00001e0247f930accd8ac01686401fa2ab67616d00001e02754b2fddebe7039fdb912837ab67616d00001e02b234aeff6eedc8276fe0333a"
+        },
+        {
+          id: "7JFn4HcMjyfSJs7IMSycrc",
+          title: "ethereal dreamy songs",
+          creator: "lily ✧︎",
+          img: "https://image-cdn-ak.spotifycdn.com/image/ab67706c0000d72c68641a997851cd391fe31175"
+        },
+        {
+          id: "3rq6CQM7q1nDf97axF4qSx",
+          title: "the strokes, the smiths...",
+          creator: "anna",
+          img: "https://image-cdn-fa.spotifycdn.com/image/ab67706c0000da843bece6a911bbf02b7038997d"
+        }
+      ];
+      const shuffled = data.sort(() => 0.5 - Math.random()).slice(0, 9);
+      const container = document.getElementById("recommended-playlists");
+      container.innerHTML = shuffled.map(pl => `
+        <li class="flex flex-col items-center justify-between bg-transparent p-4 rounded text-center">
+          <img src="${pl.img}" class="mb-2 w-80 h-80 object-cover">
+          <p class="text-base font-semibold mt-2 truncate max-w-full">${pl.title}</p>
+          <p class="text-sm text-gray-400 truncate max-w-full">${pl.creator}</p>
+          <a href="https://open.spotify.com/playlist/${pl.id}" target="_blank" class="mt-2 bg-green-500 hover:bg-green-600 text-black font-bold py-1 px-4 rounded-full text-sm">Open</a>
+        </li>`).join("");
+    }
+
+    shufflePlaylists();
+
+    new Chart(document.getElementById("activityChart").getContext("2d"), {
+  type: "line",
+  data: {
+    labels: Array.from({ length: 100 }, (_, i) => i),
+    datasets: [
+      {
+        label: "Listening Curve",
+        data: Array.from({ length: 100 }, (_, i) => {
+          const x = (i - 50) / 10;
+          return Math.exp(-0.5 * x * x);
+        }),
+        borderColor: "#22c55e",
+        borderWidth: 2,
+        pointRadius: 0,
+        fill: true,
+        backgroundColor: "rgba(34, 197, 94, 0.2)",
+        tension: 0.3
+      },
+      {
+        label: "You",
+        data: Array.from({ length: 100 }, (_, i) => {
+          const x = (i - 50) / 10;
+          const y = Math.exp(-0.5 * x * x);
+          return i === 50 ? y : null;
+        }),
+        borderColor: "white",
+        backgroundColor: "white",
+        pointRadius: 6,
+        pointHoverRadius: 6,
+        type: "line",
+        showLine: true
+      }
+    ]
+  },
+  options: {
+    plugins: { legend: { display: false } },
+    scales: { x: { display: false }, y: { display: false } }
+  }
+});
+  </script>
+</body>
+</html>

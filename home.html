@@ -144,7 +144,7 @@ if (accessToken) {
   localStorage.setItem("spotify_access_token", accessToken);
   history.replaceState(null, "", window.location.pathname);
 }
-document.getElementById("status").textContent = "Clarify - by v2dom";
+document.getElementById("status").textContent = "Clarify - Spotify Insights";
 
 const token = localStorage.getItem("spotify_access_token");
 
@@ -258,7 +258,7 @@ async function initializeApp() {
   try {
     const profile = await fetchSpotify("me", token);
     document.getElementById("greeting").textContent = `Hi, ${profile.display_name}`;
-    document.getElementById("status").textContent = "Clarify - by v2dom";
+    document.getElementById("status").textContent = "Clarify - Spotify Insights";
     document.getElementById("dashboard").style.display = "grid";
 
     renderNowPlaying(token);
@@ -276,54 +276,80 @@ async function renderActivityChart(token) {
   const canvas = document.getElementById("activityChart");
   if (!canvas) return;
   const ctx = canvas.getContext("2d");
-  const data = await fetchSpotify("me/player/recently-played?limit=50", token);
-  const timestamps = data.items.map(i => new Date(i.played_at));
-  const oldest = timestamps[timestamps.length - 1];
-  const newest = timestamps[0];
-  const hoursSpan = (newest - oldest) / 1000 / 60 / 60;
-  const score = Math.max(1, Math.floor(50 / Math.max(1, hoursSpan)));
-  new Chart(ctx, {
-    type: "line",
-    data: {
-      labels: Array.from({ length: 100 }, (_, i) => i),
-      datasets: [
-        {
-          label: "Listening Curve",
-          data: Array.from({ length: 100 }, (_, i) => {
-            const x = (i - 50) / 10;
-            return Math.exp(-0.5 * x * x);
-          }),
-          borderColor: "#22c55e",
-          borderWidth: 2,
-          pointRadius: 0,
-          fill: true,
-          backgroundColor: "rgba(34, 197, 94, 0.2)",
-          tension: 0.3
-        },
-        {
-          label: "You",
-          data: Array.from({ length: 100 }, (_, i) => {
-            const x = (i - 50) / 10;
-            const y = Math.exp(-0.5 * x * x);
-            return i === Math.min(99, Math.floor(score * 10)) ? y : null;
-          }),
-          borderColor: "white",
-          backgroundColor: "white",
-          pointRadius: 6,
-          pointHoverRadius: 6,
-          type: "line",
-          showLine: false
-        }
-      ]
-    },
-    options: {
-      plugins: { legend: { display: false } },
-      scales: { x: { display: false }, y: { display: false } }
-    }
-  });
-  const tier = score > 15 ? "top 0.1%" : score > 10 ? "top 1%" : score > 5 ? "top 5%" : score > 2 ? "top 25%" : score > 1 ? "top 50%" : "top 60%";
-  document.getElementById("activityLabel").innerHTML = `<span class='text-green-400 font-semibold'>${tier.toUpperCase()}</span> — based on your recent listening activity.`;
+
+  try {
+    const data = await fetchSpotify("me/player/recently-played?limit=50", token);
+    const timestamps = data.items.map(i => new Date(i.played_at));
+    const oldest = timestamps[timestamps.length - 1];
+    const newest = timestamps[0];
+    const hoursSpan = (newest - oldest) / 1000 / 60 / 60;
+
+    const score = Math.max(1, Math.floor(50 / Math.max(1, hoursSpan)));
+
+    let scoreIndex = 50;
+    if (score >= 25) scoreIndex = 98;
+    else if (score >= 15) scoreIndex = 90;
+    else if (score >= 10) scoreIndex = 75;
+    else if (score >= 5) scoreIndex = 60;
+    else if (score >= 2) scoreIndex = 50;
+    else if (score >= 1) scoreIndex = 40;
+    else scoreIndex = 30;
+
+    new Chart(ctx, {
+      type: "line",
+      data: {
+        labels: Array.from({ length: 100 }, (_, i) => i),
+        datasets: [
+          {
+            label: "Listening Curve",
+            data: Array.from({ length: 100 }, (_, i) => {
+              const x = (i - 50) / 10;
+              return Math.exp(-0.5 * x * x);
+            }),
+            borderColor: "#22c55e",
+            borderWidth: 2,
+            pointRadius: 0,
+            fill: true,
+            backgroundColor: "rgba(34, 197, 94, 0.2)",
+            tension: 0.3
+          },
+          {
+            label: "You",
+            data: Array.from({ length: 100 }, (_, i) => {
+              const x = (i - 50) / 10;
+              const y = Math.exp(-0.5 * x * x);
+              return i === scoreIndex ? y : null;
+            }),
+            borderColor: "white",
+            backgroundColor: "white",
+            pointRadius: 6,
+            pointHoverRadius: 6,
+            type: "line",
+            showLine: false
+          }
+        ]
+      },
+      options: {
+        plugins: { legend: { display: false } },
+        scales: { x: { display: false }, y: { display: false } }
+      }
+    });
+
+    let tier = "TOP 50%";
+    if (score >= 25) tier = "TOP 0.1%";
+    else if (score >= 15) tier = "TOP 1%";
+    else if (score >= 10) tier = "TOP 10%";
+    else if (score >= 5) tier = "TOP 25%";
+    else if (score >= 2) tier = "TOP 50%";
+    else if (score >= 1) tier = "TOP 60%";
+    else tier = "LOW ACTIVITY";
+
+    document.getElementById("activityLabel").innerHTML = `<span class='text-green-400 font-semibold'>${tier}</span> — based on your recent listening activity.`;
+  } catch (e) {
+    console.error("Activity chart error:", e);
+  }
 }
+
 
 async function updateTopArtists(token) {
   const range = document.getElementById("artist-range")?.value || "short_term";
