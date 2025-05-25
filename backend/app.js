@@ -43,7 +43,7 @@ app.get('/callback', async (req, res) => {
       });
 
     const { access_token, refresh_token, expires_in } = tokenResponse.data;
-    const redirectUrl = new URL('https://v2dom.dev/clarify/home');
+    const redirectUrl = new URL('https://clarify.v2dom.dev/home');
     redirectUrl.searchParams.set('access_token', access_token);
     redirectUrl.searchParams.set('refresh_token', refresh_token);
     redirectUrl.searchParams.set('expires_in', expires_in);
